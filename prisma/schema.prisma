@@ -1,0 +1,35 @@
+datasource db {
+  provider = "postgresql" // You can also use mysql, sqlite, or others.
+  url      = env("DATABASE_URL") // Connection URL from environment variable
+}
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String 
+  role String 
+}
+
+model Tripsheet {
+  id              Int      @id @default(autoincrement())
+  vehicleType     String
+  vehicleNo       String
+  driverName      String
+  date            DateTime
+  openKm          Float
+  openHr          Float
+  closeKm         Float
+  closeHr         Float
+  totalKm         Float
+  totalHr         Float
+  ms              String?
+  reporting       String?
+  bookedBy        String
+  journeyDetails  String
+  status          String
+ 
+}
