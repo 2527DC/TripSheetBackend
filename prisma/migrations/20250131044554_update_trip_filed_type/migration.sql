@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Tripsheet" ALTER COLUMN "openHr" SET DATA TYPE TEXT,
+ALTER COLUMN "closeHr" SET DATA TYPE TEXT;

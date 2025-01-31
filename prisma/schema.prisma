@@ -21,9 +21,9 @@ model Tripsheet {
   driverName      String
   date            DateTime
   openKm          Float
-  openHr          Float
+  openHr          String
   closeKm         Float
-  closeHr         Float
+  closeHr         String
   totalKm         Float
   totalHr         Float
   ms              String?
@@ -31,5 +31,7 @@ model Tripsheet {
   bookedBy        String
   journeyDetails  String
   status          String
+  driver_url      String
+  guest_url      String
  
 }
