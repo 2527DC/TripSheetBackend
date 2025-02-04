@@ -18,7 +18,7 @@ const signaturesDir = path.resolve(__dirname, '..', 'signatures');
 const router = express.Router();
 
 router.get('/message', (req,res)=>{
-    res.send("  this is the message form the router ")
+    res.send("  this is the message form the router  and the cici is completed ")
 });
 
 router.post('/login',login)
