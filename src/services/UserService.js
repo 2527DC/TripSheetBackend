@@ -191,3 +191,35 @@ export const updateTripStatus = async (tripId, newStatus) => {
   }
 }
 
+
+// Update only the status field of a Tripsheet
+export const UpdateStatus= async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ error: "Status is required" });
+  }
+
+  try {
+    // Check if the Tripsheet with the given ID exists
+    const existingTripsheet = await prisma.tripsheet.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existingTripsheet) {
+      return res.status(404).json({ error: "Tripsheet not found" });
+    }
+
+    // If found, proceed with the update
+    const updatedTripsheet = await prisma.tripsheet.update({
+      where: { id: Number(id) },
+      data: { status },
+    });
+
+    res.json({ message: "Status updated successfully", updatedTripsheet });
+  } catch (error) {
+    console.error("Error updating status:", error);
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+}

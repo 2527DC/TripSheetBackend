@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Driver" ALTER COLUMN "phoneNo" SET DATA TYPE TEXT;
+
+-- AlterTable
+ALTER TABLE "Vendor" ALTER COLUMN "phoneNo" SET DATA TYPE TEXT;

@@ -1,6 +1,8 @@
 import { saveSignatureImage } from "../services/SaveSIgnatureService.js";
 import { addTrip, getUser, updateTripStatus } from "../services/UserService.js";
+import { PrismaClient } from '@prisma/client';
 
+const prisma = new PrismaClient();
 export const login = async (req, res) => {
   console.log("The login method in the controller got invoked");
 
@@ -95,3 +97,30 @@ export const updateTripStatusController = async (req, res) => {
 };
 
 
+
+export  const getFormdata =async (req, res) => {
+  const { formId } = req.params;
+
+  try {
+    // Query the database to find the trip sheet by formId
+    const tripSheet = await prisma.form.findUnique({
+      where: { formId: formId },
+    });
+
+    if (tripSheet) {
+      res.status(200).json({
+        message: "Trip sheet fetched successfully",
+        data: tripSheet,
+      });
+    } else {
+      res.status(404).json({
+        message: "Trip sheet not found",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong",
+      error: error,
+    });
+  }
+}

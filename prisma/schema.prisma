@@ -35,3 +35,37 @@ model Tripsheet {
   guest_url      String
  
 }
+
+
+model Form{
+  id             Int    @default(autoincrement()) // Unique identifier
+  formId         String   @unique 
+  drivername     String
+  vehicleNo      String
+  passengerName  String
+  passengerPh    String
+  reportingTime  String
+  reportingAddress String
+  dropAddress    String
+  acType         String
+  signature      String? 
+  status         String   @default("pending") 
+
+  createdAt      DateTime @default(now()) // Timestamp of form creation
+}
+
+model Driver {
+  id             Int    @default(autoincrement()) // Unique identifier
+  driverName     String
+  phoneNo        String  @unique
+  vehicleNo      String @unique
+  vehicleType    String
+}
+
+
+model Vendor {
+  id             Int    @default(autoincrement()) // Unique identifier
+  vendorName     String
+  phoneNo        String  @unique
+  city           String
+}
