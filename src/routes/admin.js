@@ -18,7 +18,7 @@ const signaturesDir = path.resolve(__dirname, '..', 'signatures');
 const router = express.Router();
 
 router.get('/message', (req,res)=>{
-    res.send(" Hi man sucessfull made te changes and applied cicd V3  ")
+    res.send(" Hi man sucessfull made te changes and applied cicd V4 ")
 });
 
 router.post('/login',login)
