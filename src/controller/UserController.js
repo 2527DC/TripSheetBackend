@@ -34,7 +34,7 @@ export const login = async (req, res) => {
   }
 };
 
-export const TripDetailsController = async (req, res) => {
+export const addTripSheet = async (req, res) => {
   const { Driversignature, Guestsignature } = req.body;
   // console.log("🔹 Received Request Body:", req.body);
   try {

@@ -36,19 +36,26 @@ model Tripsheet {
  
 }
 
-
 model Form{
   id             Int    @default(autoincrement()) // Unique identifier
   formId         String   @unique 
+  vendor         String
   drivername     String
   vehicleNo      String
+  vehicleType    String
   passengerName  String
   passengerPh    String
   reportingTime  String
   reportingAddress String
   dropAddress    String
   acType         String
-  signature      String? 
+  driver_url      String?
+  guest_url      String?
+  totalKm        Float?
+  openKm          Float?
+  openHr          String?
+  closeKm         Float?
+  closeHr         String?
   status         String   @default("pending") 
 
   createdAt      DateTime @default(now()) // Timestamp of form creation

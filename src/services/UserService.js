@@ -81,58 +81,48 @@ export const getUser = async (req) => {
 };
 
 
+
 export const addTrip = async (req, driver_url, guest_url) => {
   try {
     const {
-      vehicleType,
-      vehicleNo,
-      driverName,
-      date,
       openKm,
       openHr,
       closeKm,
       closeHr,
       totalKm,
-      totalHr,
-      ms,
-      reporting,
-      bookedBy,
-      journeyDetails,
-      status,
+      formId,
+      
     } = req.body;
 
     // Ensure required fields are present
-    if (!vehicleType || !vehicleNo || !driverName || !date) {
-      throw new Error("Missing required trip details");
+    if (!openHr|| !formId ||!openKm||!closeHr||!closeKm||!totalKm) {
+      throw new Error("Missing required trip details, including formId");
     }
 
-    // Create new trip entry
-    const newTrip = await prisma.tripsheet.create({
+    const updatedTrip = await prisma.form.updateMany({ 
+      where: { formId: formId },
       data: {
-        vehicleType,
-        vehicleNo,
-        driverName,
-        date: new Date(date),
         openKm,
         openHr,
         closeKm,
         closeHr,
         totalKm,
-        totalHr,
-        ms,
-        reporting,
-        bookedBy,
-        journeyDetails,
-        status,
         driver_url,
         guest_url,
+       
       },
     });
 
-    return newTrip;
+    if (updatedTrip.count === 0) {  // Check if any records were updated
+      return { message: "Form not found" }; // Or throw an error if you prefer
+      // throw new Error("Form not found"); // Throwing an error is another option
+    }
+
+    return updatedTrip; // Return the update result (or a success message)
+
   } catch (error) {
     console.error("Error in addTrip:", error);
-    throw new Error(error.message || "Database error while adding trip details");
+    throw new Error(error.message || "Database error while updating trip details");
   }
 };
 
@@ -172,9 +162,11 @@ export const updateTripStatus = async (tripId, newStatus) => {
       take: limit,
       orderBy: { id: "desc" }, // Order by latest trips (optional)
     });
+console.log(" this is the data ",trips);
 
     // Get total count of trips
-    const totalTrips = await prisma.tripsheet.count();
+    const totalTrips = await prisma.form.count();
+console.log(totalTrips);
 
     res.status(200).json({
       success: true,

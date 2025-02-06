@@ -1,8 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -21,33 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 // Enable CORS for your frontend (for example, on http://localhost:5173)
 app.use(cors({
   origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
   credentials: true, // Allow cookies if using authentication
 }));
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// API to send image based on the filename
-app.post('/api/getSignature', (req, res) => {
-  const { imageName } = req.body;
-
-  if (!imageName) {
-    return res.status(400).json({ error: 'Image name is required' });
-  }
-
-  // Path to the image based on the passed filename
-  const imagePath = path.join(__dirname, '..', 'signatures', imageName);
-
-  // Check if the file exists
-  if (fs.existsSync(imagePath)) {
-    // Send the image file as binary data
-    res.sendFile(imagePath);
-  } else {
-    res.status(404).json({ error: 'Image not found' });
-  }
-});
 
 // Test the database connection
 const testDatabaseConnection = async () => {
