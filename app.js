@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Enable CORS for your frontend (for example, on http://localhost:5173)
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: 'https://tripsheet.mltcorporate.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
   credentials: true, // Allow cookies if using authentication
 }));
