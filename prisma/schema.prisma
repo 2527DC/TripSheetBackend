@@ -57,6 +57,8 @@ model Form{
   closeKm         Float?
   closeHr         String?
   status         String   @default("pending") 
+  parkingCharges  Float?
+  toolCharges     Float?
 
   createdAt      DateTime @default(now()) // Timestamp of form creation
 }

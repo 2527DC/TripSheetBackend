@@ -91,6 +91,8 @@ export const addTrip = async (req, driver_url, guest_url) => {
       closeHr,
       totalKm,
       formId,
+      parkingCharges,
+      toolCharges
       
     } = req.body;
 
@@ -109,7 +111,8 @@ export const addTrip = async (req, driver_url, guest_url) => {
         totalKm,
         driver_url,
         guest_url,
-       
+        parkingCharges: parkingCharges ? parseFloat(parkingCharges) : null ,       // Convert to string
+        toolCharges: toolCharges ? parseFloat(toolCharges) : null           // Convert to string
       },
     });
 
@@ -215,3 +218,5 @@ export const UpdateStatus= async (req, res) => {
     res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 }
+
+
