@@ -34,7 +34,7 @@ model Tripsheet {
   driver_url      String
   guest_url      String
  
-}
+} 
 
 model Form{
   id             Int    @default(autoincrement()) // Unique identifier
