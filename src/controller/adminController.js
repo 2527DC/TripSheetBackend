@@ -431,3 +431,24 @@ if (!companyName) {
     res.status(500).json({ message: "Something went wrong", error: error.message });
   }
 }
+
+
+export const getCompanys = async (req, res) => {
+  try {
+    const companysList = await prisma.company.findMany({
+      select: {
+        id:true,
+      companyName: true, // Select only the vendorName field
+      },
+    });
+
+    if (companysList.length === 0) {
+      return res.status(404).json({ message: "No vendors found" });
+    }
+
+    return res.status(200).json(companysList);
+  } catch (error) {
+    console.error("Error fetching vendors:", error);
+    return res.status(500).json({ message: "Failed to fetch vendors" });
+  }
+};

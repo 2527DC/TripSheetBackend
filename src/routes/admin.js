@@ -1,7 +1,7 @@
 import express from 'express'
 import { addTripSheet, getFormdata, login, } from '../controller/UserController.js';
 
-import { createCompany, createDriver,  createUser,  createVendor,  generatelink, getdata, getImage,
+import { createCompany, createDriver,  createUser,  createVendor,  generatelink, getCompanys, getdata, getImage,
      getVendors, updateTripStatus, validateGenerateLink, validateUser } from '../controller/adminController.js';
 
 
@@ -22,6 +22,8 @@ router.post("/createVendor",createVendor)// create vendor
 router.post("/generate-link", validateGenerateLink, generatelink);//  creating tripsheet 
 router.get("/form/:formId", getFormdata); // get the form details to driver 
 router.patch("/updateStatus",updateTripStatus)// update the tripsheet status (aprov ,reject )
+router.get("/getCompany",getCompanys)
+
 
 // Driver API
 router.get("/gettrips", getdata); // get the trips list 
