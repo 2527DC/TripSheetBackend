@@ -1,36 +1,36 @@
 import express from 'express'
-import { addTripSheet, getFormdata, login, updateTripStatusController } from '../controller/UserController.js';
-import { tripShett, UpdateStatus } from '../services/UserService.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { createDriver,  createVendor,  generatelink, getdata, getImage, getVendors, updateTripStatus } from '../controller/adminController.js';
+import { addTripSheet, getFormdata, login, } from '../controller/UserController.js';
+
+import { createCompany, createDriver,  createUser,  createVendor,  generatelink, getdata, getImage,
+     getVendors, updateTripStatus, validateGenerateLink, validateUser } from '../controller/adminController.js';
 
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
-// Define the signatures directory
-const signaturesDir = path.resolve(__dirname, '..', 'signatures');
 
 const router = express.Router();
 
+
+// Admin routes 
+
+router.post("/createUser",validateUser,createUser) // create  admin users 
+router.post("/createCompany",createCompany) // create company
+router.get('/get-signature/:imageName',getImage) // get image api to check 
+router.post('/login',login)// login 
+router.get('/getVendors',getVendors) // get  vendorList
+router.post("/createDriver",createDriver)// create Driver 
+router.post("/createVendor",createVendor)// create vendor 
+router.post("/generate-link", validateGenerateLink, generatelink);//  creating tripsheet 
+router.get("/form/:formId", getFormdata); // get the form details to driver 
+router.patch("/updateStatus",updateTripStatus)// update the tripsheet status (aprov ,reject )
+
+// Driver API
+router.get("/gettrips", getdata); // get the trips list 
+router.patch('/addtripsheet', addTripSheet) //  Driver updating the tripss 
+
+
+//  checking api 
+router.get('/get-signature/:imageName',getImage) // get image api to check 
 router.get('/message', (req,res)=>{
     res.send(" Hi man sucessfull made te changes and applied cicd V7 ")
 });
-router.get('/get-signature/:imageName',getImage)
-router.post('/login',login)
-router.get('/trips',tripShett)
-router.get('/getVendors',getVendors)
-// router.post('/updatestatus',updateTripStatusController)
-router.patch('/addtripsheet', addTripSheet)
-router.post("/createDriver",createDriver)
-router.post("/createVendor",createVendor)
-router.patch("/tripsheets/:id/status",UpdateStatus)
-router.post("/generate-link",generatelink)
-router.get("/form/:formId", getFormdata);
-
-router.get("/gettrips", getdata);
-router.patch("/updateStatus",updateTripStatus)
-
 export default router;

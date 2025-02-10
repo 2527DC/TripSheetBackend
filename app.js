@@ -47,5 +47,5 @@ app.use('/api', router);
 const port = 3000;
 const hostname = '0.0.0.0'; // Allow connections from all network interfaces
 app.listen(port, hostname, () => {
-  console.log(`Server is running on https://${hostname}:${port}`);
+  console.log(`Server is running on http://${hostname}:${port}`);
 });

@@ -2,11 +2,41 @@ import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from "uuid";
 import { fileURLToPath } from 'url';
 import path from 'path';
-
+import { body, validationResult } from "express-validator";
 const prisma = new PrismaClient();
 
-// Generate a unique form link
+
+export const validateGenerateLink = [
+  body("acType").notEmpty().withMessage("acType is required"),
+  body("driver").notEmpty().withMessage("driver is required"),
+  body("dropAddress").notEmpty().withMessage("dropAddress is required"),
+  body("passengerName").notEmpty().withMessage("passengerName is required"),
+  body("passengerPhoneNumber")
+    .notEmpty()
+    .withMessage("passengerPhoneNumber is required")
+    .isMobilePhone()
+    .withMessage("Invalid phone number"),
+  body("reportingAddress")
+    .notEmpty()
+    .withMessage("reportingAddress is required"),
+  body("vehicle").notEmpty().withMessage("vehicle is required"),
+  body("reportingTime").notEmpty().withMessage("reportingTime is required"),
+  body("vendor").notEmpty().withMessage("vendor is required"),
+  body("vehicleType").notEmpty().withMessage("vehicleType is required"),
+  body("bookedBy").notEmpty().withMessage("bookedBy is required"),
+  body("company").notEmpty().withMessage("company is required"),
+];
+
 export const generatelink = async (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ 
+      message: "Validation errors",
+      errors: errors.array(),
+    });
+  }
+
   const formId = uuidv4();
   const {
     acType,
@@ -19,33 +49,11 @@ export const generatelink = async (req, res) => {
     reportingTime,
     vendor,
     vehicleType,
+    bookedBy,
+    company, // Ensure this is present
   } = req.body;
 
   console.log("Request Body:", req.body);
-
-  // Validation: Check if any required field is missing
-  const requiredFields = {
-    acType,
-    driver,
-    dropAddress,
-    passengerName,
-    passengerPhoneNumber,
-    reportingAddress,
-    vehicle,
-    reportingTime,
-    vendor,
-    vehicleType,
-  };
-
-  const missingFields = Object.keys(requiredFields).filter(
-    (key) => !requiredFields[key]
-  );
-
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      message: `Missing required fields: ${missingFields.join(", ")}`,
-    });
-  }
 
   try {
     const newTripsheet = await prisma.form.create({
@@ -61,6 +69,8 @@ export const generatelink = async (req, res) => {
         acType,
         vendor,
         vehicleType,
+        bookedBy,
+        company, // Ensure this is included
       },
     });
 
@@ -68,14 +78,24 @@ export const generatelink = async (req, res) => {
       message: "Trip created successfully",
       data: newTripsheet,
     });
+
   } catch (error) {
     console.error("Error:", error);
+
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        message: `A trip with the same ${error.meta.target.join(", ")} already exists.`,
+      });
+    }
+
     res.status(500).json({
-      message: "Something went wrong",
-      error: error.message,
+      message: "Database error",
+      details: error.message, // More detailed error message
     });
   }
 };
+
+// method  to create driver 
   export const createDriver = async (req, res) => {
     const { driverName, vehicleNo, vehicleType, phNumber } = req.body; // Change vehicleNO to vehicleNo
 
@@ -323,3 +343,91 @@ export const updateTripStatus=async (req, res) => {
     });
   }
 };
+
+
+
+ 
+
+//  method to create a admin user 
+  
+// Validation middleware
+export const validateUser = [
+  body("name").notEmpty().withMessage("Name is required"),
+  body("email").isEmail().withMessage("Invalid email format"),
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+  body("role").isIn(["admin", "user"]).withMessage("Invalid role"), // Modify as per your roles
+];
+
+export const createUser = async (req, res) => {
+  // Validate request body
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array(), message: "Validation errors", });
+  }
+
+  const { name, email, password, role } = req.body;
+
+  try {
+    // Create new user
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password, // Hash this before storing (use bcrypt)
+        role,
+      },
+    });
+
+    res.status(201).json({ message: "User created successfully", user: newUser });
+  } catch (error) {
+    if (error.code === "P2002") {
+      // Extract which field is causing the unique constraint violation
+      const duplicateFields = error.meta?.target || ["unknown field"];
+      
+      return res.status(400).json({
+        message: `The following field(s) already exist: ${duplicateFields.join(", ")}`,
+       
+      });
+    }
+
+    res.status(500).json({ message: "Something went wrong", error: error.message });
+  }
+};
+
+
+
+export const  createCompany=async (req,res)=>{
+const {companyName}=req.body;
+
+if (!companyName) {
+  res.status(400).json({
+    message:"company name  required "
+  })}
+  
+  try {
+    const newCompany = await prisma.company.create({
+      data:{
+        companyName
+      }
+    })
+   res.status(201).json({
+    message:" company created successfully ",
+    companyName:newCompany
+   })
+
+  } catch (error) {
+    if (error.code === "P2002") {
+      // Extract which field is causing the unique constraint violation
+      const duplicateFields = error.meta?.target || ["unknown field"];
+      
+      return res.status(400).json({
+        message: `The following field(s) already exist: ${duplicateFields.join(", ")}`,
+       
+      });
+    }
+
+    res.status(500).json({ message: "Something went wrong", error: error.message });
+  }
+}

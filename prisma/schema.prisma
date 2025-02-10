@@ -14,27 +14,7 @@ model User {
   role String 
 }
 
-model Tripsheet {
-  id              Int      @id @default(autoincrement())
-  vehicleType     String
-  vehicleNo       String
-  driverName      String
-  date            DateTime
-  openKm          Float
-  openHr          String
-  closeKm         Float
-  closeHr         String
-  totalKm         Float
-  totalHr         Float
-  ms              String?
-  reporting       String?
-  bookedBy        String
-  journeyDetails  String
-  status          String
-  driver_url      String
-  guest_url      String
- 
-} 
+
 
 model Form{
   id             Int    @default(autoincrement()) // Unique identifier
@@ -59,7 +39,9 @@ model Form{
   status         String   @default("pending") 
   parkingCharges  Float?
   toolCharges     Float?
-
+  bookedBy        String
+  company         String
+ submitted       Boolean @default(false) 
   createdAt      DateTime @default(now()) // Timestamp of form creation
 }
 
@@ -77,4 +59,10 @@ model Vendor {
   vendorName     String
   phoneNo        String  @unique
   city           String
+}
+
+model Company {
+  id             Int    @default(autoincrement()) // Unique identifier
+  companyName     String @unique
+ 
 }

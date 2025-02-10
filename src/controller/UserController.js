@@ -1,5 +1,5 @@
 import { saveSignatureImage } from "../services/SaveSIgnatureService.js";
-import { addTrip, getUser, updateTripStatus } from "../services/UserService.js";
+import {  getUser} from "../services/UserService.js";
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -35,41 +35,73 @@ export const login = async (req, res) => {
 };
 
 export const addTripSheet = async (req, res) => {
-  const { Driversignature, Guestsignature } = req.body;
-  // console.log("🔹 Received Request Body:", req.body);
   try {
-    // Validate required fields
-    if (!Driversignature || !Guestsignature) {
-      return res.status(400).json({ message: "Driver and Guest signatures are required" });
+    const { 
+      Driversignature, 
+      Guestsignature, 
+      openKm, 
+      openHr, 
+      closeKm, 
+      closeHr, 
+      totalKm, 
+      formId, 
+      parkingCharges, 
+      toolCharges 
+    } = req.body;
+
+    // ✅ Step 1: Validate Required Fields
+    if (!Driversignature || !Guestsignature || !openKm || !openHr || !closeKm || !closeHr || !totalKm || !formId) {
+      return res.status(400).json({ message: "Missing required trip details" });
     }
 
-    // Save signatures as images
+    // ✅ Step 2: Save Signatures as Images
     const driverSignatureFileName = saveSignatureImage(Driversignature, "driver");
     const guestSignatureFileName = saveSignatureImage(Guestsignature, "guest");
 
-    // Ensure both signatures are saved successfully
     if (!driverSignatureFileName || !guestSignatureFileName) {
       return res.status(500).json({ message: "Failed to save signatures" });
     }
 
-    // Call service to add trip
-    const trip = await addTrip(req, driverSignatureFileName, guestSignatureFileName);
-
-    if (trip) {
-      return res.status(201).json({
-        message: "Trip details added successfully",
-        trip, // Return the trip data for verification
-        success:true
-      });
-    } else {
-      return res.status(500).json({ message: "Failed to add trip details" });
-    }
-  } catch (error) {
-    console.error("Error in TripDetailsController:", error);
-    return res.status(500).json({
-      message: "Something went wrong while saving trip details",
-      error: error.message,
+    // ✅ Step 3: Check if Form Exists & Is Already Submitted
+    const existingTrip = await prisma.form.findUnique({
+      where: { formId: formId },
+      select: { submitted: true }
     });
+
+    if (!existingTrip) {
+      return res.status(404).json({ message: "Form not found" });
+    }
+
+    if (existingTrip.submitted) {
+      return res.status(400).json({ message: "Form already submitted" });
+    }
+
+    // ✅ Step 4: Update the Trip Record
+    const updatedTrip = await prisma.form.update({
+      where: { formId: formId },
+      data: {
+        openKm,
+        openHr,
+        closeKm,
+        closeHr,
+        totalKm,
+        driver_url: driverSignatureFileName,
+        guest_url: guestSignatureFileName,
+        parkingCharges: parkingCharges ? parseFloat(parkingCharges) : null,
+        toolCharges: toolCharges ? parseFloat(toolCharges) : null,
+        submitted: true
+      },
+    });
+
+    // ✅ Step 5: Send Success Response
+    return res.status(200).json({ 
+      message: "Trip details updated successfully", 
+      updatedTrip 
+    });
+
+  } catch (error) {
+    console.error("Error in addTripSheet:", error);
+    return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 
