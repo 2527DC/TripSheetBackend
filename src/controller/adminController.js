@@ -156,7 +156,7 @@ export const generatelink = async (req, res) => {
 
      
          res.status(201).json({
-          message: "Driver created successfully",
+          message: "Vendor created successfully",
           driver: newVendor,
         });
     

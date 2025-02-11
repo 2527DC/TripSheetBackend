@@ -43,7 +43,8 @@ export const addTripSheet = async (req, res) => {
       openHr, 
       closeKm, 
       closeHr, 
-      totalKm, 
+      totalKm,
+      totalHr, 
       formId, 
       parkingCharges, 
       toolCharges 
@@ -85,6 +86,7 @@ export const addTripSheet = async (req, res) => {
         closeKm,
         closeHr,
         totalKm,
+        totalHr, 
         driver_url: driverSignatureFileName,
         guest_url: guestSignatureFileName,
         parkingCharges: parkingCharges ? parseFloat(parkingCharges) : null,

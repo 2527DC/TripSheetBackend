@@ -32,6 +32,7 @@ model Form{
   driver_url      String?
   guest_url      String?
   totalKm        Float?
+  totalHr         String?
   openKm          Float?
   openHr          String?
   closeKm         Float?
