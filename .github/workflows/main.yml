@@ -1,4 +1,4 @@
-name: CI/CD for Express.js on VPS changed 
+name: CI/CD for Express.js on VPS
 
 on:
   push:
@@ -26,5 +26,15 @@ jobs:
             git reset --hard origin/main
             git pull origin main
             npm install
-            pm2 restart all
+            
+            # Switch to deploy user and start PM2
+            sudo -u deploy bash -c '
+              cd /var/www/TripSheetBackend
+              if pm2 list | grep -q "trip-sheet-backend"; then
+                pm2 restart trip-sheet-backend
+              else
+                pm2 start app.js --name trip-sheet-backend
+              fi
+              pm2 save
+            '
           EOF
