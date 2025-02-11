@@ -49,6 +49,7 @@ export const addTripSheet = async (req, res) => {
       parkingCharges, 
       toolCharges 
     } = req.body;
+console.log(" this is the request body  from driver ",req.body);
 
     // ✅ Step 1: Validate Required Fields
     if (!Driversignature || !Guestsignature || !openKm || !openHr || !closeKm || !closeHr || !totalKm || !formId) {
