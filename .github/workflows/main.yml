@@ -21,10 +21,10 @@ jobs:
       - name: Deploy code to VPS
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            cd /var/www/TripSheetBackend  # Change to your project directory
+            cd /var/www/TripSheetBackend
             git fetch --all
-            git reset --hard origin/main  # Reset to the latest version
-            git pull origin main          # Pull the latest code
-            npm install                   # Install new dependencies
-            pm2 restart all               # Restart all PM2 processes
+            git reset --hard origin/main
+            git pull origin main
+            npm install
+            pm2 restart all
           EOF
