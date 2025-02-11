@@ -32,7 +32,7 @@ model Form{
   driver_url      String?
   guest_url      String?
   totalKm        Float?
-  totalHr         String?// Unique identifier added this 
+  totalHr         String?  // Unique identifier added this 
   openKm          Float?
   openHr          String?
   closeKm         Float?
@@ -42,7 +42,8 @@ model Form{
   toolCharges     Float?
   bookedBy        String
   company         String
- submitted       Boolean @default(false) 
+  check           String?
+  submitted       Boolean @default(false) 
   createdAt      DateTime @default(now()) // Timestamp of form creation
 }
 

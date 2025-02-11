@@ -44,13 +44,20 @@ export const addTripSheet = async (req, res) => {
       closeKm, 
       closeHr, 
       totalKm,
-      totalHr, // aded this 
+      totalHr,   // aded this 
       formId, 
       parkingCharges, 
       toolCharges 
     } = req.body;
-console.log(" this is the driver request " ,req.body);
+   console.log(" this is the driver request " ,req.body);
 
+   if (totalHr) {
+    console.log("  the total hr is there but");
+    
+   }else{
+    console.log(" the total hr not sent ");
+    
+   }
     // ✅ Step 1: Validate Required Fields
     if (!Driversignature || !Guestsignature || !openKm || !openHr || !closeKm || !closeHr || !totalKm || !formId) {
       return res.status(400).json({ message: "Missing required trip details" });
