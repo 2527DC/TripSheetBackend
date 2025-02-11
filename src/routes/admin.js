@@ -35,4 +35,9 @@ router.get('/get-signature/:imageName',getImage) // get image api to check
 router.get('/message', (req,res)=>{
     res.send(" Hi man sucessfull made te changes and applied cicd V7 ")
 });
+
+
+router.get("/check",(req,res)=>{
+    res.send(" checking the resolves  ")
+})
 export default router;
