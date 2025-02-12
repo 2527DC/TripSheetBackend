@@ -27,17 +27,17 @@ model Form{
   passengerPh    String
   reportingTime  String
   reportingAddress String
-  dropAddress    String
-  acType         String
+  dropAddress     String
+  acType          String
   driver_url      String?
-  guest_url      String?
-  totalKm        Float?
+  guest_url       String?
+  totalKm         Float?
   totalHr         String?  // Unique identifier added this 
   openKm          Float?
   openHr          String?
   closeKm         Float?
   closeHr         String?
-  status         String   @default("pending") 
+  status          String   @default("pending") 
   parkingCharges  Float?
   toolCharges     Float?
   bookedBy        String

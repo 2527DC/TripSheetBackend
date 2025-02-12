@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { body, validationResult } from "express-validator";
+import { log } from 'console';
+import { saveSignatureImage } from '../services/SaveSIgnatureService.js';
 const prisma = new PrismaClient();
 
 
@@ -450,5 +452,107 @@ export const getCompanys = async (req, res) => {
   } catch (error) {
     console.error("Error fetching vendors:", error);
     return res.status(500).json({ message: "Failed to fetch vendors" });
+  }
+};
+
+
+export const updateSingleField = async (req, res) => {
+  try {
+    const { formId, fieldName, fieldValue } = req.body;
+
+    if (!formId || !fieldName || fieldValue === undefined) {
+      return res.status(400).json({ message: "formId, fieldName, and fieldValue are required" });
+    }
+
+    // ✅ Check if the field exists in the Prisma model (optional)
+    const validFields = [
+      "vendor", "drivername", "vehicleNo", "vehicleType", "passengerName",
+      "passengerPh", "reportingTime", "reportingAddress", "dropAddress",
+      "acType", "driver_url", "guest_url", "totalKm", "totalHr",
+      "openKm", "openHr", "closeKm", "closeHr", "status",
+      "parkingCharges", "toolCharges", "bookedBy", "company",
+      "check", "submitted"
+    ];
+
+    if (!validFields.includes(fieldName)) {
+      return res.status(400).json({ message: `Invalid field name: ${fieldName}` });
+    }
+
+    // ✅ Update the specific field dynamically
+    const updatedTrip = await prisma.form.update({
+      where: { formId },
+      data: { [fieldName]: fieldValue },
+    });
+
+    return res.status(200).json({
+      message: `Field '${fieldName}' updated successfully ${fieldValue}`
+    });
+
+  } catch (error) {
+    console.error("Error updating field:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+export const validateSignature = [
+  body("signature")
+    .notEmpty()
+    .withMessage("Signature is required.")
+    .isString()
+    .withMessage("Signature must be a base64 string."),
+  body("type")
+    .notEmpty()
+    .withMessage("File type is required.")
+    .isIn(["image/png", "image/jpeg"])
+    .withMessage("Invalid file type. Only PNG and JPEG are allowed."),
+  body("formId")
+    .notEmpty()
+    .withMessage("Form ID is required.")
+    .isInt()
+    .withMessage("Form ID must be a valid integer."),
+];
+
+export const updateSignature = async (req, res) => {
+  // Check for validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { signature, type, formId } = req.body;
+
+  try {
+    // Find the form by formId
+    // const foundForm = await prisma.form.findUnique({
+    //   where: { id: parseInt(formId) }, // Convert formId to integer
+    // });
+
+    // if (!foundForm) {
+    //   return res.status(404).json({ error: "Form not found." });
+    // }
+
+    // Save the signature image (Assuming this function exists)
+    const fileName = saveSignatureImage(signature, type);
+     console.log(" this  is the file name ",fileName);
+
+    // Determine which field to update based on type
+    const updateData = type === "driver" ? { driver_url: fileName } : { guest_url: fileName };
+
+    // Update the form record
+    const updatedForm = await prisma.form.update({
+      where: { formId: formId },
+      data: updateData,
+    });
+
+    res.status(200).json({ message: "Signature updated successfully!", signature: fileName});
+  } catch (error) {
+    console.error("Error updating signature:", error);
+    res.status(500).json({ error: "Failed to update signature." });
   }
 };

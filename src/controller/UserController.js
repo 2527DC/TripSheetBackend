@@ -44,23 +44,36 @@ export const addTripSheet = async (req, res) => {
       closeKm, 
       closeHr, 
       totalKm,
-      totalHr,   // aded this 
+      totalHr,   // Added this 
       formId, 
       parkingCharges, 
       toolCharges 
     } = req.body;
-   console.log(" this is the driver request " ,req.body);
 
-   if (totalHr) {
-    console.log("  the total hr is there but");
-    
-   }else{
-    console.log(" the total hr not sent ");
-    
-   }
-    // ✅ Step 1: Validate Required Fields
-    if (!Driversignature || !Guestsignature || !openKm || !openHr || !closeKm || !closeHr || !totalKm || !formId) {
-      return res.status(400).json({ message: "Missing required trip details" });
+    console.log("Received TripSheet request:", req.body);
+
+    if (totalHr) {
+      console.log("Total hours provided:", totalHr);
+    } else {
+      console.log("Total hours not sent.");
+    }
+
+    // ✅ Step 1: Check for missing fields and list them
+    let missingFields = [];
+
+    if (!Driversignature) missingFields.push("Driversignature");
+    if (!Guestsignature) missingFields.push("Guestsignature");
+    if (!openKm) missingFields.push("openKm");
+    if (!openHr) missingFields.push("openHr");
+    if (!closeKm) missingFields.push("closeKm");
+    if (!closeHr) missingFields.push("closeHr");
+    if (!totalKm) missingFields.push("totalKm");
+    if (!formId) missingFields.push("formId");
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({ 
+        message: `Missing required fields: ${missingFields.join(", ")}` 
+      });
     }
 
     // ✅ Step 2: Save Signatures as Images
@@ -94,7 +107,7 @@ export const addTripSheet = async (req, res) => {
         closeKm,
         closeHr,
         totalKm,
-        totalHr, // aded this 
+        totalHr, // Added this 
         driver_url: driverSignatureFileName,
         guest_url: guestSignatureFileName,
         parkingCharges: parkingCharges ? parseFloat(parkingCharges) : null,
@@ -111,7 +124,10 @@ export const addTripSheet = async (req, res) => {
 
   } catch (error) {
     console.error("Error in addTripSheet:", error);
-    return res.status(500).json({ message: "Internal server error", error: error.message });
+    return res.status(500).json({ 
+      message: "Internal server error", 
+      error: error.message 
+    });
   }
 };
 
