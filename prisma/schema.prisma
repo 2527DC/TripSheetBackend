@@ -42,7 +42,7 @@ model Form{
   toolCharges     Float?
   bookedBy        String
   company         String
-  check           String?
+  category          String?
   submitted       Boolean @default(false) 
   createdAt      DateTime @default(now()) // Timestamp of form creation
 }
@@ -69,4 +69,9 @@ model Company {
   id             Int    @default(autoincrement()) // Unique identifier
   companyName     String @unique
  
+}
+
+model Category {
+  id             Int    @default(autoincrement()) 
+  category      String @unique
 }

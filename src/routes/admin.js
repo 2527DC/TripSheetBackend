@@ -1,7 +1,7 @@
 import express from 'express'
 import { addTripSheet, getFormdata, login, } from '../controller/UserController.js';
 
-import { createCompany, createDriver,  createUser,  createVendor,  generatelink, getCompanys, getdata, getImage,
+import { createCompany, createDriver,  createUser,  createVendor,  cretaeCategory,  generatelink, getCategory, getCompanys, getdata, getImage,
      getVendors, updateSignature, updateSingleField, updateTripStatus, validateGenerateLink, validateSignature, validateUser } from '../controller/adminController.js';
 
 
@@ -25,6 +25,8 @@ router.patch("/updateStatus",updateTripStatus)// update the tripsheet status (ap
 router.get("/getCompany",getCompanys) // get company list 
 router.patch("/editField",updateSingleField)
 router.patch("/updateSignature",updateSignature)
+router.post("/createCategory",cretaeCategory)
+router.get("/getCategory",getCategory)
 
 // Driver API
 router.get("/gettrips", getdata); // get the trips list 

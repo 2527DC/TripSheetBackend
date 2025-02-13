@@ -11,6 +11,7 @@ const prisma = new PrismaClient();
 export const validateGenerateLink = [
   body("acType").notEmpty().withMessage("acType is required"),
   body("driver").notEmpty().withMessage("driver is required"),
+  body("category").notEmpty().withMessage("driver is required"),
   body("dropAddress").notEmpty().withMessage("dropAddress is required"),
   body("passengerName").notEmpty().withMessage("passengerName is required"),
   body("passengerPhoneNumber")
@@ -52,7 +53,8 @@ export const generatelink = async (req, res) => {
     vendor,
     vehicleType,
     bookedBy,
-    company, // Ensure this is present
+    company,
+    category // Ensure this is present
   } = req.body;
 
   console.log("Request Body:", req.body);
@@ -72,7 +74,8 @@ export const generatelink = async (req, res) => {
         vendor,
         vehicleType,
         bookedBy,
-        company, // Ensure this is included
+        company,
+        category 
       },
     });
 
@@ -556,3 +559,59 @@ export const updateSignature = async (req, res) => {
     res.status(500).json({ error: "Failed to update signature." });
   }
 };
+
+
+export const cretaeCategory=async(req,res)=>{
+const {category}=req.body;
+if (!category) {
+  res.status(400).json({
+    message:"field is required "
+  })
+  
+}
+try {
+  
+  const newCategory=await prisma.category.create({
+    data:{
+      category
+    }
+
+  })
+  
+  res.status(201).json({
+    message:" category created Successful  "
+  })
+
+} catch (error) {
+  if (error.code === 'P2002') { // Unique constraint violation error code
+    const failedFields = error.meta.target; // This will contain the violated field(s) as an array
+
+    // Log the violated field(s)
+    console.log(`Unique constraint failed on fields: ${failedFields.join(', ')}`);
+
+    // Send an appropriate response
+      res.status(400).json({
+      message: ` ${failedFields} aleady exist`,
+    });
+  } else {
+    // Handle other types of errors
+    res.status(500).json({ error: error });
+  }
+}
+
+}
+
+export const getCategory= async (req,res)=>{
+  try {
+    const categoryList =await prisma.category.findMany()
+
+    res.status(200).json({
+     categoryList:categoryList
+    })  
+  } catch (error) {
+    res.status(500).json({
+      message:"something went wrong in the backend ",
+      error:error
+    })
+  }
+  }
