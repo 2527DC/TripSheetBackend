@@ -8,13 +8,15 @@ import { saveSignatureImage } from '../services/SaveSIgnatureService.js';
 const prisma = new PrismaClient();
 
 
+
+
 export const validateGenerateLink = [
   body("acType").notEmpty().withMessage("acType is required"),
   body("driver").notEmpty().withMessage("driver is required"),
   body("category").notEmpty().withMessage("driver is required"),
   body("dropAddress").notEmpty().withMessage("dropAddress is required"),
-  body("passengerName").notEmpty().withMessage("passengerName is required"),
-  body("passengerPhoneNumber")
+  body("customer").notEmpty().withMessage("passengerName is required"),
+  body("customerPh")
     .notEmpty()
     .withMessage("passengerPhoneNumber is required")
     .isMobilePhone()
@@ -23,20 +25,25 @@ export const validateGenerateLink = [
     .notEmpty()
     .withMessage("reportingAddress is required"),
   body("vehicle").notEmpty().withMessage("vehicle is required"),
+  body("vendorName").notEmpty().withMessage("vendorName is required"),
   body("reportingTime").notEmpty().withMessage("reportingTime is required"),
-  body("vendor").notEmpty().withMessage("vendor is required"),
   body("vehicleType").notEmpty().withMessage("vehicleType is required"),
-  body("bookedBy").notEmpty().withMessage("bookedBy is required"),
   body("company").notEmpty().withMessage("company is required"),
 ];
 
 export const generatelink = async (req, res) => {
   const errors = validationResult(req);
-  
-  if (!errors.isEmpty()) {
+
+  if (!errors.isEmpty()) {  
+    // Create a structured response that tells exactly what is missing
+    const missingFields = errors.array().map(err => ({
+      field: err.param, // Field name that caused the error
+      message: err.msg  // Error message
+    }));
+
     return res.status(400).json({ 
-      message: "Validation errors",
-      errors: errors.array(),
+      message: "Validation failed",
+      missingFields, // Sending detailed missing fields
     });
   }
 
@@ -45,37 +52,37 @@ export const generatelink = async (req, res) => {
     acType,
     driver,
     dropAddress,
-    passengerName,
-    passengerPhoneNumber,
+    customer,
+    customerPh,
     reportingAddress,
     vehicle,
     reportingTime,
-    vendor,
-    vehicleType,
-    bookedBy,
+    vendorName,
+    vehicleType,  
     company,
-    category // Ensure this is present
+    category,
+    createdAt
   } = req.body;
 
   console.log("Request Body:", req.body);
 
   try {
-    const newTripsheet = await prisma.form.create({
+    const newTripsheet = await prisma.tripSheet.create({
       data: {
         formId,
-        drivername: driver,
+        driverName: driver,
         vehicleNo: vehicle,
-        passengerName,
-        passengerPh: passengerPhoneNumber,
+         customer,
+        customerPh,
         reportingTime,
         reportingAddress,
         dropAddress,
         acType,
-        vendor,
         vehicleType,
-        bookedBy,
+        vendorName,
         company,
-        category 
+        category,
+        createdAt
       },
     });
 
@@ -95,10 +102,11 @@ export const generatelink = async (req, res) => {
 
     res.status(500).json({
       message: "Database error",
-      details: error.message, // More detailed error message
+      details: error.message,
     });
   }
 };
+
 
 // method  to create driver 
   export const createDriver = async (req, res) => {
@@ -190,7 +198,6 @@ export const generatelink = async (req, res) => {
     try {
       const vendorsList = await prisma.vendor.findMany({
         select: {
-          id:true,
           vendorName: true, // Select only the vendorName field
         },
       });
@@ -280,44 +287,6 @@ export const getForms = async (req, res) => {
   }
 };
 
-
- export const getdata=async (req, res) => {
-  try {
-    // Get pagination parameters from query params
-    let { page, limit } = req.query;
-
-    // Convert to numbers and set defaults
-    page = parseInt(page) || 1;
-    limit = parseInt(limit) || 10;
-    const skip = (page - 1) * limit;
-
-    // Fetch paginated data
-    const users = await prisma.form.findMany({
-      skip: skip,
-      take: limit,
-      orderBy: {
-        id: "asc", // Change as needed
-      },
-    });
-
-    // Get total count of records
-    const totalUsers = await prisma.form.count();
-
-    res.json({
-      success: true,
-      data: users,
-      pagination: {
-        totalRecords: totalUsers,
-        totalPages: Math.ceil(totalUsers / limit),
-        currentPage: page,
-        perPage: limit,
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-}
 
 
 
@@ -603,10 +572,15 @@ try {
 
 export const getCategory= async (req,res)=>{
   try {
-    const categoryList =await prisma.category.findMany()
+    const categoryList =await prisma.category.findMany({
+      select: {
+        id:true,
+        category: true, // Select only the vendorName field
+      },
+    })
 
     res.status(200).json({
-     categoryList:categoryList
+     categoryList
     })  
   } catch (error) {
     res.status(500).json({
@@ -615,3 +589,90 @@ export const getCategory= async (req,res)=>{
     })
   }
   }
+
+  
+
+  // export async function getTripsByVendorAndDate(req, res) {
+  //   try {
+  //     const { vendorName, fromDate, toDate } = req.query;
+  
+  //     // Convert fromDate to the start of the day
+  //     const startDate = new Date(fromDate);
+  //     startDate.setHours(0, 0, 0, 0); // 00:00:00.000
+  
+  //     // Convert toDate to the END of the day
+  //     const endDate = new Date(toDate);
+  //     endDate.setHours(23, 59, 59, 999); // 23:59:59.999
+  
+  //     const trips = await prisma.form.findMany({
+  //       where: {
+  //         vendor: {
+  //           vendorName: vendorName, // Use the related vendor model for filtering
+  //         },
+  //         createdAt: {
+  //           gte: startDate, // Start of fromDate
+  //           lte: endDate,   // End of toDate
+  //         },
+  //       },
+  //     });
+  // if (trips.length===0) {
+  //   res.status(200).json({
+  //     message: "No trips Found "
+  //   });
+    
+  // }else{
+  //   res.status(200).json(trips);
+  // }
+     
+  //   } catch (error) {
+  //     console.error("Error fetching trip sheets:", error);
+  //     res.status(500).json({ error: error.message, message: "Something went wrong in backend" });
+  //   }
+  // }
+
+
+  export async function getTripsByVendorAndDate(req, res) {
+  try {
+    const { vendorName, fromDate, toDate } = req.query;
+
+    // Convert fromDate to the start of the day
+    const startDate = new Date(fromDate);
+    startDate.setHours(0, 0, 0, 0); // 00:00:00.000
+
+    // Convert toDate to the END of the day
+    const endDate = new Date(toDate);
+    endDate.setHours(23, 59, 59, 999); // 23:59:59.999
+
+    const trips = await prisma.form.findMany({
+      where: {
+        vendor: {
+          vendorName: vendorName, // Use the related vendor model for filtering
+        },
+        createdAt: {
+          gte: startDate, // Start of fromDate
+          lte: endDate,   // End of toDate
+        },
+        submitted: true, // Only get trips where submitted is true
+      },
+    });
+
+    if (trips.length === 0) {
+      res.status(200).json({
+        message: "No submitted trips found for this vendor and date range"
+      });
+    } else {
+      res.status(200).json({
+        message: "Submitted trips retrieved successfully",
+        data: trips
+      });
+    }
+     
+  } catch (error) {
+    console.error("Error fetching trip sheets:", error);
+    res.status(500).json({ 
+      error: error.message, 
+      message: "Something went wrong in backend" 
+    });
+  }
+}
+  

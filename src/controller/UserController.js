@@ -1,38 +1,8 @@
 import { saveSignatureImage } from "../services/SaveSIgnatureService.js";
-import {  getUser} from "../services/UserService.js";
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-export const login = async (req, res) => {
-  console.log("The login method in the controller got invoked");
 
-  try {
-    const result = await getUser(req);
-
-    if (result.success) {
-      // Success response
-      return res.status(result.status).json({
-        success: true,
-        message: result.message,
-        role: result.data?.role,
-      });
-    } else {
-      // Failure response (wrong credentials or other error)
-      return res.status(result.status).json({
-        success: false,
-        message: result.message,
-        error: result.error || null, // Include error message if available
-      });
-    }
-  } catch (error) {
-    console.error("Error in login controller:", error);
-    return res.status(500).json({
-      success: false,
-      message: "An unexpected error occurred",
-      error: error.message,
-    });
-  }
-};
 
 export const addTripSheet = async (req, res) => {
   try {
@@ -180,5 +150,61 @@ export  const getFormdata =async (req, res) => {
       message: "Something went wrong",
       error: error,
     });
+  }
+}
+
+
+
+export const getVehicleDetails=async (req, res) => {
+  const { search } = req.query;
+console.log("the method is invoked");
+
+  try {
+    const vehicles = await prisma.vehicle.findMany({
+      where: {
+        vehicleNo: {
+          contains: search, // 🔥 Fetch vehicles matching search input
+          mode: "insensitive", // Case insensitive search
+        },
+      },
+      take: 10, // 🔥 Limit results to 10 for performance
+      include:{
+        drivers:{
+        include:{
+          vendor:true
+        }
+      }}
+    }); 
+
+    res.json(vehicles);
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+
+export const getCompanyDetails=async (req, res) => {
+  const { search } = req.query;
+console.log("the method  getComapany details got invoked");
+
+  try {
+    const vehicles = await prisma.company.findMany({
+      where: {
+        companyName: {
+          contains: search, // 🔥 Fetch vehicles matching search input
+          mode: "insensitive", // Case insensitive search
+        },
+      },
+      take: 10, // 🔥 Limit results to 10 for performance
+      include:{
+        customers:true
+       }
+    }); 
+
+    res.json(vehicles);
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 }

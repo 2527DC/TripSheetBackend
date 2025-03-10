@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "Driver" ALTER COLUMN "phoneNo" SET DATA TYPE BIGINT;
-
--- AlterTable
-ALTER TABLE "Vendor" ALTER COLUMN "phoneNo" SET DATA TYPE BIGINT;

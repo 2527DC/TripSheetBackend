@@ -1,77 +1,93 @@
-datasource db {
-  provider = "postgresql" // You can also use mysql, sqlite, or others.
-  url      = env("DATABASE_URL") // Connection URL from environment variable
-}
 generator client {
   provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id       Int    @id @default(autoincrement())
   name     String
   email    String @unique
-  password String 
-  role String 
+  password String
+  role     String
 }
 
-
-
-model Form{
-  id             Int    @default(autoincrement()) // Unique identifier
-  formId         String   @unique 
-  vendor         String
-  drivername     String
-  vehicleNo      String
-  vehicleType    String
-  passengerName  String
-  passengerPh    String
-  reportingTime  String
+model TripSheet {
+  id               Int      @id @default(autoincrement())
+  formId           String   @unique 
+  driverName       String
+  vehicleNo       String   
+  vehicleType      String
+  customer         String
+  customerPh       String
   reportingAddress String
-  dropAddress     String
-  acType          String
-  driver_url      String?
-  guest_url       String?
-  totalKm         Float?
-  totalHr         String?  // Unique identifier added this 
-  openKm          Float?
-  openHr          String?
-  closeKm         Float?
-  closeHr         String?
-  status          String   @default("pending") 
-  parkingCharges  Float?
-  toolCharges     Float?
-  bookedBy        String
-  company         String
-  category          String?
-  submitted       Boolean @default(false) 
-  createdAt      DateTime @default(now()) // Timestamp of form creation
+  dropAddress      String
+  acType           String
+  createdAt        DateTime @default(now())
+  status           String   @default("pending")
+  closeHr          Float?
+  closeKm          Float?
+  driver_url       String?
+  guest_url        String?
+  openHr           Float?
+  openKm           Float?
+  totalKm          Float?
+  parkingCharges   Float?
+  toolCharges      Float?
+  company          String
+  submitted        Boolean  @default(false)
+  totalHr          Float?
+  reportingTime    String
+  vendorName       String? 
+  category      String
 }
 
+model Vehicle { 
+  id          Int      @id @default(autoincrement())
+  vehicleNo   String   @unique    
+  vehicleType String
+  drivers     Driver[]
+  
+}
 
 model Driver {
-  id             Int    @default(autoincrement()) // Unique identifier
-  driverName     String
-  phoneNo        String  @unique
-  vehicleNo      String @unique
-  vehicleType    String
-}
+  id          Int      @id @default(autoincrement())
+  driverName  String
+  phoneNo     String   @unique
+  vehicleId   Int
+  vendorId    Int?    
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
 
+  
+}
 
 model Vendor {
-  id             Int    @default(autoincrement()) // Unique identifier
-  vendorName     String
-  phoneNo        String  @unique
-  city           String
-}
-
-model Company {
-  
-  id             Int    @default(autoincrement()) // Unique identifier
-  companyName     String @unique
+  id         Int      @id @default(autoincrement())
+  vendorName String   @unique
+  drivers    Driver[]
  
 }
 
 model Category {
-  id             Int    @default(autoincrement()) 
-  category      String @unique
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+ 
+}
+
+model Company {
+  id          Int         @id @default(autoincrement())
+  companyName String
+  customers   Customers[] // ✅ One company has many customers
+}
+
+model Customers {
+  id           Int      @id @default(autoincrement())
+  customerName String
+  phoneNo      String 
+  companyId    Int      // ✅ Foreign key field
+  company      Company  @relation(fields: [companyId], references: [id]) // ✅ Define relation properly
 }
