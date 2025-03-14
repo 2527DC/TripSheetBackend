@@ -1,11 +1,11 @@
-import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from "uuid";
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { body, validationResult } from "express-validator";
 import { log } from 'console';
 import { saveSignatureImage } from '../services/SaveSIgnatureService.js';
-const prisma = new PrismaClient();
+import { prisma } from "../services/prismaclient.js";
+
 
 
 
@@ -107,63 +107,14 @@ export const generatelink = async (req, res) => {
   }
 };
 
-
-// method  to create driver 
-  export const createDriver = async (req, res) => {
-    const { driverName, vehicleNo, vehicleType, phNumber } = req.body; // Change vehicleNO to vehicleNo
-
-  
-    if (!driverName) {
-      return res.status(400).json({ message: "driverName is required" });
-    } else if (!vehicleNo) {
-      return res.status(400).json({ message: "vehicleNo is required" });
-    } else if (!vehicleType) {
-      return res.status(400).json({ message: "vehicleType is required" });
-    } else if (!phNumber) {
-      return res.status(400).json({ message: "phNumber is required" });
-    }
-    
-    try {
-      const newDriver = await prisma.driver.create({
-        data: {
-          driverName,
-          vehicleNo,  // Match Prisma schema
-          vehicleType,
-          phoneNo:phNumber,
-        },
-      });
-  
-      return res.status(201).json({
-        message: "Driver created successfully",
-        driver: newDriver,
-      });
-    } catch (error) {
-      if (error.code === 'P2002') { // Unique constraint violation error code
-        const failedFields = error.meta.target; // This will contain the violated field(s) as an array
-    
-        // Log the violated field(s)
-        console.log(`Unique constraint failed on fields: ${failedFields.join(', ')}`);
-    
-        // Send an appropriate response
-          res.status(400).json({
-          message: ` ${failedFields} aleady exist`,
-        });
-      } else {
-        // Handle other types of errors
-        res.status(500).json({ error: error });
-      }
-    
-    }
-  };
   
   export const createVendor = async (req, res) => {
-    const { vendorName,phoneNo,city } = req.body; // Change vehicleNO to vehicleNo
+    const { vendorName,vendorPh} = req.body; // Change vehicleNO to vehicleNo
     try {
       const newVendor = await prisma.vendor.create({
         data: {
           vendorName,
-          phoneNo,  // Match Prisma schema
-          city 
+          vendorPh
         },
       });
 
@@ -263,14 +214,14 @@ export const getForms = async (req, res) => {
     orderByClause[sortBy] = sortOrder;
 
 
-    const forms = await prisma.form.findMany({
+    const forms = await prisma.tripSheet.findMany({
       where: whereClause,
       skip: skip,
       take: limit,
       orderBy: orderByClause,
     });
 
-    const totalForms = await prisma.form.count({ where: whereClause });
+    const totalForms = await prisma.tripSheet.count({ where: whereClause });
 
     res.status(200).json({
       success: true,
@@ -297,7 +248,7 @@ export const updateTripStatus=async (req, res) => {
 
   try {
     // Update the user in the database
-    const updatedUser = await prisma.form.update({
+    const updatedUser = await prisma.tripSheet.update({
       where: { formId: id }, // Find user by ID
       data: { status}, // Update the name field
     });
@@ -395,9 +346,8 @@ if (!companyName) {
     if (error.code === "P2002") {
       // Extract which field is causing the unique constraint violation
       const duplicateFields = error.meta?.target || ["unknown field"];
-      
       return res.status(400).json({
-        message: `The following field(s) already exist: ${duplicateFields.join(", ")}`,
+        message: `The  ${duplicateFields.join(", ")} already exist`,
        
       });
     }
@@ -451,7 +401,7 @@ export const updateSingleField = async (req, res) => {
     }
 
     // ✅ Update the specific field dynamically
-    const updatedTrip = await prisma.form.update({
+    const updatedTrip = await prisma.tripSheet.update({
       where: { formId },
       data: { [fieldName]: fieldValue },
     });
@@ -501,7 +451,7 @@ export const updateSignature = async (req, res) => {
 
   try {
     // Find the form by formId
-    // const foundForm = await prisma.form.findUnique({
+    // const foundForm = await prisma.tripSheet.findUnique({
     //   where: { id: parseInt(formId) }, // Convert formId to integer
     // });
 
@@ -517,7 +467,7 @@ export const updateSignature = async (req, res) => {
     const updateData = type === "driver" ? { driver_url: fileName } : { guest_url: fileName };
 
     // Update the form record
-    const updatedForm = await prisma.form.update({
+    const updatedForm = await prisma.tripSheet.update({
       where: { formId: formId },
       data: updateData,
     });
@@ -604,7 +554,7 @@ export const getCategory= async (req,res)=>{
   //     const endDate = new Date(toDate);
   //     endDate.setHours(23, 59, 59, 999); // 23:59:59.999
   
-  //     const trips = await prisma.form.findMany({
+  //     const trips = await prisma.tripSheet.findMany({
   //       where: {
   //         vendor: {
   //           vendorName: vendorName, // Use the related vendor model for filtering
@@ -632,47 +582,98 @@ export const getCategory= async (req,res)=>{
 
 
   export async function getTripsByVendorAndDate(req, res) {
+    try {
+      const { vendorName, fromDate, toDate } = req.query;
+  
+      if (!vendorName || !fromDate || !toDate) {
+        return res.status(400).json({ message: "Missing required parameters" });
+      }
+  
+      // ✅ Convert dates to UTC for accurate comparison
+      const startDate = new Date(fromDate + "T00:00:00.000Z");
+      const endDate = new Date(toDate + "T23:59:59.999Z");
+  
+      const trips = await prisma.tripSheet.findMany({
+        where: {
+          AND: [
+            { vendorName: { equals: vendorName, mode: "insensitive" } }, // ✅ Case-insensitive match
+            { createdAt: { gte: startDate, lte: endDate } }, // ✅ Ensure time range covers entire day
+            { submitted: true }, // ✅ Ensure trip is submitted
+          ],
+        },
+        orderBy: { createdAt: "asc" }, // ✅ Ensure correct ordering
+      });
+  
+      if (trips.length === 0) {
+        return res.status(200).json({ message: "No trips found", data: [] });
+      }
+  
+      res.status(200).json({ message: "Trips retrieved successfully", data: trips });
+  
+    } catch (error) {
+      console.error("Error fetching trip sheets:", error);
+      res.status(500).json({ message: "Backend error", error: error.message });
+    }
+  }
+  
+
+export const createDriver = async (req, res) => {
   try {
-    const { vendorName, fromDate, toDate } = req.query;
+    const { driverName, phoneNo, vehicleId } = req.body; // ✅ Fixed variable name
 
-    // Convert fromDate to the start of the day
-    const startDate = new Date(fromDate);
-    startDate.setHours(0, 0, 0, 0); // 00:00:00.000
+    // 🔴 Check if vehicleId is provided
+    if (!vehicleId) {
+      return res.status(400).json({ message: "vehicleId is required" });
+    }
 
-    // Convert toDate to the END of the day
-    const endDate = new Date(toDate);
-    endDate.setHours(23, 59, 59, 999); // 23:59:59.999
-
-    const trips = await prisma.form.findMany({
-      where: {
-        vendor: {
-          vendorName: vendorName, // Use the related vendor model for filtering
+    const driver = await prisma.driver.create({
+      data: {
+        driverName,
+        phoneNo,
+        vehicle: {
+          connect: { id: vehicleId }, // ✅ Properly linking vehicle
         },
-        createdAt: {
-          gte: startDate, // Start of fromDate
-          lte: endDate,   // End of toDate
-        },
-        submitted: true, // Only get trips where submitted is true
       },
     });
 
-    if (trips.length === 0) {
-      res.status(200).json({
-        message: "No submitted trips found for this vendor and date range"
-      });
-    } else {
-      res.status(200).json({
-        message: "Submitted trips retrieved successfully",
-        data: trips
-      });
-    }
-     
+    res.status(201).json({
+      message: "Driver created successfully",
+      driver,
+    });
+
   } catch (error) {
-    console.error("Error fetching trip sheets:", error);
-    res.status(500).json({ 
-      error: error.message, 
-      message: "Something went wrong in backend" 
+    console.error("🚨 Error creating driver:", error);
+    res.status(500).json({
+      message: "Something went wrong in server",
+      error: error.message,
     });
   }
-}
-  
+};
+
+export const createVehicle = async (req, res) => {
+  try {
+    const { vehicleNo , vehicleType} = req.body; // ✅ Fixed variable name
+
+    // 🔴 Check if vehicleId is provided
+
+
+    const driver = await prisma.vehicle.create({
+      data: {
+        vehicleNo,
+        vehicleType
+      },
+    });
+
+    res.status(201).json({
+      message: "Driver created successfully",
+      driver,
+    });
+
+  } catch (error) {
+    console.error("🚨 Error creating driver:", error);
+    res.status(500).json({
+      message: "Something went wrong in server",
+      error: error.message,
+    });
+  }
+};

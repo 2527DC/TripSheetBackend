@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export const addTripSheet = async (req, res) => {
   try {
     const { 
-      Driversignature, 
+   
       Guestsignature, 
       openKm, 
       openHr, 
@@ -17,7 +17,8 @@ export const addTripSheet = async (req, res) => {
       totalHr,   // Added this 
       formId, 
       parkingCharges, 
-      toolCharges 
+      toolCharges,
+       review:rating
     } = req.body;
 
     console.log("Received TripSheet request:", req.body);
@@ -31,7 +32,7 @@ export const addTripSheet = async (req, res) => {
     // ✅ Step 1: Check for missing fields and list them
     let missingFields = [];
 
-    if (!Driversignature) missingFields.push("Driversignature");
+   
     if (!Guestsignature) missingFields.push("Guestsignature");
     if (!openKm) missingFields.push("openKm");
     if (!openHr) missingFields.push("openHr");
@@ -47,15 +48,15 @@ export const addTripSheet = async (req, res) => {
     }
 
     // ✅ Step 2: Save Signatures as Images
-    const driverSignatureFileName = saveSignatureImage(Driversignature, "driver");
+    
     const guestSignatureFileName = saveSignatureImage(Guestsignature, "guest");
 
-    if (!driverSignatureFileName || !guestSignatureFileName) {
+    if ( !guestSignatureFileName) {
       return res.status(500).json({ message: "Failed to save signatures" });
     }
 
     // ✅ Step 3: Check if Form Exists & Is Already Submitted
-    const existingTrip = await prisma.form.findUnique({
+    const existingTrip = await prisma.tripSheet.findUnique({
       where: { formId: formId },
       select: { submitted: true }
     });
@@ -69,7 +70,7 @@ export const addTripSheet = async (req, res) => {
     }
 
     // ✅ Step 4: Update the Trip Record
-    const updatedTrip = await prisma.form.update({
+    const updatedTrip = await prisma.tripSheet.update({
       where: { formId: formId },
       data: {
         openKm,
@@ -78,11 +79,12 @@ export const addTripSheet = async (req, res) => {
         closeHr,
         totalKm,
         totalHr, // Added this 
-        driver_url: driverSignatureFileName,
         guest_url: guestSignatureFileName,
         parkingCharges: parkingCharges ? parseFloat(parkingCharges) : null,
         toolCharges: toolCharges ? parseFloat(toolCharges) : null,
-        submitted: true
+        submitted: true,
+        rating
+
       },
     });
 
@@ -131,7 +133,7 @@ export  const getFormdata =async (req, res) => {
 
   try {
     // Query the database to find the trip sheet by formId
-    const tripSheet = await prisma.form.findUnique({
+    const tripSheet = await prisma.tripSheet.findUnique({
       where: { formId: formId },
     });
 
@@ -184,6 +186,30 @@ console.log("the method is invoked");
 }
 
 
+
+export const getVehicleOnly=async (req, res) => {
+  const { search } = req.query;
+console.log("the method is invoked");
+
+  try {
+    const vehicles = await prisma.vehicle.findMany({
+      where: {
+        vehicleNo: {
+          contains: search, // 🔥 Fetch vehicles matching search input
+          mode: "insensitive", // Case insensitive search
+        },
+      },
+      take: 10, // 🔥 Limit results to 10 for performance
+      
+    }); 
+
+    res.json(vehicles);
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
 export const getCompanyDetails=async (req, res) => {
   const { search } = req.query;
 console.log("the method  getComapany details got invoked");
@@ -200,6 +226,29 @@ console.log("the method  getComapany details got invoked");
       include:{
         customers:true
        }
+    }); 
+
+    res.json(vehicles);
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+
+export const searchVendor=async (req, res) => {
+  const { search } = req.query;
+console.log("the method  search vendor  got  invoked");
+
+  try {
+    const vehicles = await prisma.vendor.findMany({
+      where: {
+      vendorName: {
+          contains: search, // 🔥 Fetch vehicles matching search input
+          mode: "insensitive", // Case insensitive search
+        },
+      },
+      take: 10, // 🔥 Limit results to 10 for performance
     }); 
 
     res.json(vehicles);

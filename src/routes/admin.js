@@ -1,7 +1,8 @@
 import express from 'express'
-import { addTripSheet, getCompanyDetails, getFormdata, getVehicleDetails,  } from '../controller/UserController.js';
+import { addTripSheet, getCompanyDetails, getFormdata, getVehicleDetails, getVehicleOnly, searchVendor,  } from '../controller/UserController.js';
 
 import { createCompany, createDriver,  createUser, 
+     createVehicle, 
      createVendor,  cretaeCategory,  generatelink, getCategory,
       getCompanys,  getImage,
      getTripsByVendorAndDate,
@@ -9,7 +10,7 @@ import { createCompany, createDriver,  createUser,
       updateSingleField, updateTripStatus, validateGenerateLink, validateSignature, validateUser } from '../controller/adminController.js';
 import sendWhatsAppMessage, { sendSMS } from '../services/twilioService.js';
 import { login } from '../controller/authController.js';
-import { validateLogin } from '../middlewares/authMiddleware.js';
+import { validateDriver, validateLogin } from '../middlewares/authMiddleware.js';
   
 
 
@@ -24,17 +25,17 @@ router.post("/createCompany",createCompany) // create company
 router.get('/get-signature/:imageName',getImage) // get image api to check 
 router.post('/login',validateLogin,login)// login 
 router.get('/getVendors',getVendors) // get  vendorList
-router.post("/createDriver",createDriver)// create Driver 
+router.post("/createDriver",validateDriver,createDriver)// create Driver 
 router.post("/createVendor",createVendor)// create vendor 
 router.post("/generate-link", validateGenerateLink, generatelink);//  creating tripsheet 
 
-router.patch("/updateStatus",updateTripStatus)// update the tripsheet status (aprov ,reject )
-router.get("/getCompany",getCompanys) // get company list 
+router.patch("/updateStatus",updateTripStatus)// update thetripsheet status (aprov ,reject )
+router.get("/getCompanies",getCompanys) // get company list 
 router.patch("/editField",updateSingleField)
 router.patch("/updateSignature",updateSignature)
 router.post("/createCategory",cretaeCategory)
 router.get("/getCategory",getCategory)
-router.get("/trips",getTripsByVendorAndDate) // this is the   end point for  getting the trips  list 
+
 
 
 
@@ -58,7 +59,10 @@ router.get('/message', (req,res)=>{
 // 🚀 API to search vehicles by number
 router.get("/vehicles", getVehicleDetails);
 router.get("/companys", getCompanyDetails);
-
+router.get("/vehicle-list",getVehicleOnly)
+router.post("/create-vehicle",createVehicle)
+router.get("/searchVendor", searchVendor);
+router.get("/trips",getTripsByVendorAndDate) // this is the   end point for  getting the trips  list 
 
 
 // / API to send WhatsApp message/
