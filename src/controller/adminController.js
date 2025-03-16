@@ -540,46 +540,6 @@ export const getCategory= async (req,res)=>{
   }
   }
 
-  
-
-  // export async function getTripsByVendorAndDate(req, res) {
-  //   try {
-  //     const { vendorName, fromDate, toDate } = req.query;
-  
-  //     // Convert fromDate to the start of the day
-  //     const startDate = new Date(fromDate);
-  //     startDate.setHours(0, 0, 0, 0); // 00:00:00.000
-  
-  //     // Convert toDate to the END of the day
-  //     const endDate = new Date(toDate);
-  //     endDate.setHours(23, 59, 59, 999); // 23:59:59.999
-  
-  //     const trips = await prisma.tripSheet.findMany({
-  //       where: {
-  //         vendor: {
-  //           vendorName: vendorName, // Use the related vendor model for filtering
-  //         },
-  //         createdAt: {
-  //           gte: startDate, // Start of fromDate
-  //           lte: endDate,   // End of toDate
-  //         },
-  //       },
-  //     });
-  // if (trips.length===0) {
-  //   res.status(200).json({
-  //     message: "No trips Found "
-  //   });
-    
-  // }else{
-  //   res.status(200).json(trips);
-  // }
-     
-  //   } catch (error) {
-  //     console.error("Error fetching trip sheets:", error);
-  //     res.status(500).json({ error: error.message, message: "Something went wrong in backend" });
-  //   }
-  // }
-
 
   export async function getTripsByVendorAndDate(req, res) {
     try {
@@ -677,3 +637,56 @@ export const createVehicle = async (req, res) => {
     });
   }
 };
+
+//  this is  for adding the admin
+ export const addAdmin = async (req, res) => {
+  try {
+   const { adminName, email, password, role } = req.body;
+    // Check if required fields are missing
+    if (!adminName || !email || !password || !role) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    // ✅ Create admin
+    const admin = await prisma.user.create({
+      data: { name :adminName, email, password, role },
+    });
+
+    return res.status(201).json({
+      message: "Admin created successfully",
+      admin,
+    });
+
+  } catch (error) {
+    if (error.code === "P2002") {
+      // ✅ Handle unique constraint error (duplicate entry)
+      const existingField = error.meta?.target?.[0]; // Extracts which field caused the conflict
+
+      return res.status(409).json({
+        message: `An account with this ${existingField} already exists.`,
+        existingField,
+      });
+    }
+
+    console.error("Error:", error);
+    return res.status(500).json({ message: "Something went wrong", error });
+  }
+};
+
+export const fetchAdmins= async(req,res)=>{
+
+  try {
+    const admins= await prisma.user.findMany()
+
+    if (admins) {
+      res.status(200).json(admins)
+    }
+  } catch (error) {
+    res.status(500).json({
+      message :" something went wrong on the server ",
+      error:error
+    })
+  }
+ 
+
+  
+}

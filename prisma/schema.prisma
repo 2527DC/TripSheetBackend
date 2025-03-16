@@ -88,9 +88,9 @@ model Company {
 model Customers {
   id           Int      @id @default(autoincrement())
   customerName String
-  phoneNo      String 
+  phoneNo      String @unique
   companyId    Int      // ✅ Foreign key field
-  company      Company  @relation(fields: [companyId], references: [id]) // ✅ Define relation properly
+  company      Company  @relation(fields: [companyId], references: [id] ,onDelete: Cascade) 
 }
 
 

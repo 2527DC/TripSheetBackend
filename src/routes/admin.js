@@ -1,15 +1,15 @@
 import express from 'express'
 import { addTripSheet, getCompanyDetails, getFormdata, getVehicleDetails, getVehicleOnly, searchVendor,  } from '../controller/UserController.js';
 
-import { createCompany, createDriver,  createUser, 
+import { addAdmin, createCompany, createDriver,  createUser, 
      createVehicle, 
-     createVendor,  cretaeCategory,  generatelink, getCategory,
+     createVendor,  cretaeCategory,  fetchAdmins,  generatelink, getCategory,
       getCompanys,  getImage,
      getTripsByVendorAndDate,
      getVendors,  updateSignature,
       updateSingleField, updateTripStatus, validateGenerateLink, validateSignature, validateUser } from '../controller/adminController.js';
 import sendWhatsAppMessage, { sendSMS } from '../services/twilioService.js';
-import { login } from '../controller/authController.js';
+import { createCustomer, getCustomerByCompany, login } from '../controller/authController.js';
 import { validateDriver, validateLogin } from '../middlewares/authMiddleware.js';
   
 
@@ -63,6 +63,10 @@ router.get("/vehicle-list",getVehicleOnly)
 router.post("/create-vehicle",createVehicle)
 router.get("/searchVendor", searchVendor);
 router.get("/trips",getTripsByVendorAndDate) // this is the   end point for  getting the trips  list 
+router.get("/getCustomers/:companyId", getCustomerByCompany);
+router.post("/createCustomer/:companyId",createCustomer)
+router.post("/create-admin",addAdmin)
+router.get("/fetchAdmins",fetchAdmins)
 
 
 // / API to send WhatsApp message/

@@ -45,3 +45,69 @@ import { prisma } from '../services/prismaclient.js';
    }
 
    }
+
+
+
+    export const getCustomerByCompany= async(req,res)=>{  
+      try {
+        const companyId = parseInt(req.params.companyId);
+        console.log(" this is the companyId" ,companyId);
+        const fetchCustomers = await  prisma.company.findUnique({
+          where: { id: companyId },
+          select :{
+             customers: true 
+          }
+        })
+        if (!fetchCustomers) {
+        res.status(400).json(" no customers in this company ")
+        }
+        res.status(200).json(fetchCustomers)
+        
+      } catch (error) {
+        console.log(" Error" ,error);
+        
+        res.status(500).json({
+          message: " something went wrong ",
+          error:error
+        })
+      }
+    }
+
+
+    export const createCustomer=async(req,res)=>{
+
+      try {
+        const companyId = parseInt(req.params.companyId);
+        const {customerName,phoneNumber}= req.body;
+
+        const customer= await prisma.customers.create({
+          data:{
+            customerName,
+            phoneNo:phoneNumber,
+            companyId
+          }
+        })
+
+        res.status(201).json({
+          message:"customer created succesfuly",
+          customer:customer
+          
+        })
+
+      } catch (error) {
+        if (error.code === "P2002") {
+          const existingField = error.meta?.target?.[0]; // Extracts the field that caused the conflict
+        
+          return res.status(409).json({
+            message: `A customer with this ${existingField} already exists.`,
+            existingField: existingField,
+          });
+        }
+        
+    
+        console.error("Error:", error);
+        res.status(500).json({ message: "Something went wrong", error }); // ✅ 500 Internal Server Error
+      }
+        
+ 
+    }
