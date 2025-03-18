@@ -18,7 +18,7 @@ export const addTripSheet = async (req, res) => {
       formId, 
       parkingCharges, 
       toolCharges,
-       review:rating
+      rating
     } = req.body;
 
     console.log("Received TripSheet request:", req.body);
@@ -83,7 +83,7 @@ export const addTripSheet = async (req, res) => {
         parkingCharges: parkingCharges ? parseFloat(parkingCharges) : null,
         toolCharges: toolCharges ? parseFloat(toolCharges) : null,
         submitted: true,
-        rating
+        review:rating
 
       },
     });
@@ -157,58 +157,37 @@ export  const getFormdata =async (req, res) => {
 
 
 
-export const getVehicleDetails=async (req, res) => {
+
+export const getVehicleOnly = async (req, res) => {
   const { search } = req.query;
-console.log("the method is invoked");
+  console.log("The method is invoked");
 
   try {
     const vehicles = await prisma.vehicle.findMany({
       where: {
         vehicleNo: {
-          contains: search, // 🔥 Fetch vehicles matching search input
-          mode: "insensitive", // Case insensitive search
+          contains: search || "", // Allow empty search, so it returns all vehicles
+          mode: "insensitive", // Case-insensitive search
         },
       },
-      take: 10, // 🔥 Limit results to 10 for performance
-      include:{
-        drivers:{
-        include:{
-          vendor:true
-        }
-      }}
-    }); 
+      include: {
+        drivers:true, 
+        vendor: {
+          select: {
+            vendorName: true, // Fetch vendor name
+          },
+        },
+      },
+      take: 10, // Limit results to 10 for performance
+    });
 
     res.json(vehicles);
   } catch (error) {
     console.error("Error fetching vehicles:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
-}
+};
 
-
-
-export const getVehicleOnly=async (req, res) => {
-  const { search } = req.query;
-console.log("the method is invoked");
-
-  try {
-    const vehicles = await prisma.vehicle.findMany({
-      where: {
-        vehicleNo: {
-          contains: search, // 🔥 Fetch vehicles matching search input
-          mode: "insensitive", // Case insensitive search
-        },
-      },
-      take: 10, // 🔥 Limit results to 10 for performance
-      
-    }); 
-
-    res.json(vehicles);
-  } catch (error) {
-    console.error("Error fetching vehicles:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-}
 
 export const getCompanyDetails=async (req, res) => {
   const { search } = req.query;

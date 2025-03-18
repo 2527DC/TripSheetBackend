@@ -13,7 +13,7 @@ import { prisma } from "../services/prismaclient.js";
 export const validateGenerateLink = [
   body("acType").notEmpty().withMessage("acType is required"),
   body("driver").notEmpty().withMessage("driver is required"),
-  body("category").notEmpty().withMessage("driver is required"),
+  body("category").notEmpty().withMessage("category is required"),
   body("dropAddress").notEmpty().withMessage("dropAddress is required"),
   body("customer").notEmpty().withMessage("passengerName is required"),
   body("customerPh")
@@ -34,6 +34,8 @@ export const validateGenerateLink = [
 export const generatelink = async (req, res) => {
   const errors = validationResult(req);
 
+  console.log(" this is the req " ,req.body);
+  
   if (!errors.isEmpty()) {  
     // Create a structured response that tells exactly what is missing
     const missingFields = errors.array().map(err => ({
@@ -145,25 +147,6 @@ export const generatelink = async (req, res) => {
   };
   
 
-  export const getVendors = async (req, res) => {
-    try {
-      const vendorsList = await prisma.vendor.findMany({
-        select: {
-          vendorName: true, // Select only the vendorName field
-        },
-      });
-  
-      if (vendorsList.length === 0) {
-        return res.status(404).json({ message: "No vendors found" });
-      }
-  
-      return res.status(200).json(vendorsList);
-    } catch (error) {
-      console.error("Error fetching vendors:", error);
-      return res.status(500).json({ message: "Failed to fetch vendors" });
-    }
-  };
-
 
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -250,7 +233,7 @@ export const updateTripStatus=async (req, res) => {
     // Update the user in the database
     const updatedUser = await prisma.tripSheet.update({
       where: { formId: id }, // Find user by ID
-      data: { status}, // Update the name field
+      data: { status ,edit:true}, // Update the name field
     });
 
     // Return success response
@@ -357,41 +340,22 @@ if (!companyName) {
 }
 
 
-export const getCompanys = async (req, res) => {
-  try {
-    const companysList = await prisma.company.findMany({
-      select: {
-        id:true,
-      companyName: true, // Select only the vendorName field
-      },
-    });
-
-    if (companysList.length === 0) {
-      return res.status(404).json({ message: "No vendors found" });
-    }
-
-    return res.status(200).json(companysList);
-  } catch (error) {
-    console.error("Error fetching vendors:", error);
-    return res.status(500).json({ message: "Failed to fetch vendors" });
-  }
-};
-
 
 export const updateSingleField = async (req, res) => {
   try {
-    const { formId, fieldName, fieldValue } = req.body;
+    const { formId, fieldName, fieldValue, previousValues ,tripid,userName} = req.body;
+  
 
+    // ✅ Validate required fields
     if (!formId || !fieldName || fieldValue === undefined) {
       return res.status(400).json({ message: "formId, fieldName, and fieldValue are required" });
     }
 
-    // ✅ Check if the field exists in the Prisma model (optional)
     const validFields = [
-      "vendor", "drivername", "vehicleNo", "vehicleType", "passengerName",
-      "passengerPh", "reportingTime", "reportingAddress", "dropAddress",
+      "vendorName", "driverName", "vehicleNo", "vehicleType", 
+      "reportingTime", "reportingAddress", "dropAddress",
       "acType", "driver_url", "guest_url", "totalKm", "totalHr",
-      "openKm", "openHr", "closeKm", "closeHr", "status",
+      "openKm", "openHr", "closeKm", "closeHr", "status", "customer", "customerPh",
       "parkingCharges", "toolCharges", "bookedBy", "company",
       "check", "submitted"
     ];
@@ -400,14 +364,27 @@ export const updateSingleField = async (req, res) => {
       return res.status(400).json({ message: `Invalid field name: ${fieldName}` });
     }
 
-    // ✅ Update the specific field dynamically
-    const updatedTrip = await prisma.tripSheet.update({
-      where: { formId },
-      data: { [fieldName]: fieldValue },
-    });
+    // ✅ Perform the update and create audit log in a transaction
+    const [updatedTrip] = await prisma.$transaction([
+      // Update the trip sheet
+      prisma.tripSheet.update({
+        where: { formId },
+        data: { [fieldName]: fieldValue },
+      }),
+      // Create audit log entry
+      prisma.auditLog.create({
+        data: {
+          tripSheetId:tripid, // Still need ID for relation
+          editedBy:userName,
+          fieldName,
+          oldValue: previousValues?.toString() || null, // Use the oldValue from frontend
+          newValue: fieldValue?.toString() || null,
+        },
+      }),
+    ]);
 
     return res.status(200).json({
-      message: `Field '${fieldName}' updated successfully ${fieldValue}`
+      message: `Field '${fieldName}' updated successfully to '${fieldValue}'`,
     });
 
   } catch (error) {
@@ -418,7 +395,6 @@ export const updateSingleField = async (req, res) => {
     });
   }
 };
-
 
 
 
@@ -520,25 +496,6 @@ try {
 
 }
 
-export const getCategory= async (req,res)=>{
-  try {
-    const categoryList =await prisma.category.findMany({
-      select: {
-        id:true,
-        category: true, // Select only the vendorName field
-      },
-    })
-
-    res.status(200).json({
-     categoryList
-    })  
-  } catch (error) {
-    res.status(500).json({
-      message:"something went wrong in the backend ",
-      error:error
-    })
-  }
-  }
 
 
   export async function getTripsByVendorAndDate(req, res) {
@@ -612,7 +569,7 @@ export const createDriver = async (req, res) => {
 
 export const createVehicle = async (req, res) => {
   try {
-    const { vehicleNo , vehicleType} = req.body; // ✅ Fixed variable name
+    const { vehicleNo , vehicleType ,vendorId} = req.body; // ✅ Fixed variable name
 
     // 🔴 Check if vehicleId is provided
 
@@ -620,7 +577,8 @@ export const createVehicle = async (req, res) => {
     const driver = await prisma.vehicle.create({
       data: {
         vehicleNo,
-        vehicleType
+        vehicleType,
+        vendorId
       },
     });
 
@@ -689,4 +647,91 @@ export const fetchAdmins= async(req,res)=>{
  
 
   
+}
+
+export const createCategory= async(req,res)=>{
+
+  try {
+    const {category}=req.body
+    const created= await prisma.category.create({
+      data:{
+        name:category
+      }
+    })
+
+    if (created) {
+      res.status(201).json(created)
+    }
+  } catch (error) {
+    res.status(500).json({
+      message :" something went wrong on the server ",
+      error:error
+    })
+  }  
+}
+
+export const fetchCategory= async(req,res)=>{
+
+  try {
+    const category= await prisma.category.findMany()
+
+    if (category) {
+      res.status(200).json(category)
+    }
+  } catch (error) {
+    res.status(500).json({
+      message :" something went wrong on the server ",
+      error:error
+    })
+  }
+}
+
+export const fetchLogs= async(req,res)=>{
+
+  try {
+    const Logs= await prisma.auditLog.findMany()
+
+    if (Logs) {
+      res.status(200).json(Logs)
+    }
+  } catch (error) {
+    res.status(500).json({
+      message :" something went wrong on the server ",
+      error:error
+    })
+  }
+}
+export const fetchVendors= async(req,res)=>{
+
+  try {
+    const vendor= await prisma.vendor.findMany()
+
+    if (vendor) {
+      res.status(200).json(vendor)
+    }
+  } catch (error) {
+    res.status(500).json({
+      message :" something went wrong on the server ",
+      error:error
+    })
+  }
+}
+export const fetchDrivers= async(req,res)=>{
+
+  try {
+    const drivers= await prisma.driver.findMany({
+      include:{
+        vehicle:true
+      }
+    })
+
+    if (drivers) {
+      res.status(200).json(drivers)
+    }
+  } catch (error) {
+    res.status(500).json({
+      message :" something went wrong on the server ",
+      error:error
+    })
+  }
 }

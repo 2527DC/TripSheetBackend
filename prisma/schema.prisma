@@ -16,18 +16,18 @@ model User {
 }
 
 model TripSheet {
-  id               Int      @id @default(autoincrement())
-  formId           String   @unique 
+  id               Int        @id @default(autoincrement())
+  formId           String     @unique
   driverName       String
-  vehicleNo        String   
+  vehicleNo        String
   vehicleType      String
   customer         String
   customerPh       String
   reportingAddress String
   dropAddress      String
   acType           String
-  createdAt        DateTime @default(now())
-  status           String   @default("pending")
+  createdAt        DateTime   @default(now())
+  status           String     @default("pending")
   closeHr          String?
   closeKm          Float?
   guest_url        String?
@@ -37,65 +37,67 @@ model TripSheet {
   parkingCharges   Float?
   toolCharges      Float?
   company          String
-  submitted        Boolean  @default(false)
+  submitted        Boolean    @default(false)
   totalHr          String?
   reportingTime    String
-  vendorName       String? 
+  vendorName       String?
   category         String
-  review           Int?  
+  review           Int?
+  auditLogs        AuditLog[] // ✅ Add this relation field to link `AuditLog`
+  edit             Boolean    @default(false)
 }
 
-model Vehicle { 
+model AuditLog {
   id          Int      @id @default(autoincrement())
-  vehicleNo   String   @unique    
+  tripSheetId Int // Reference to TripSheet
+  editedBy    String // Name or ID of the user who made the change
+  fieldName   String // The field that was edited
+  oldValue    String? // The previous value (before edit)
+  newValue    String? // The updated value (after edit)
+  editedAt    DateTime @default(now()) // Timestamp of the change
+
+  tripSheet TripSheet @relation(fields: [tripSheetId], references: [id], onDelete: Cascade)
+}
+
+model Vehicle {
+  id          Int      @id @default(autoincrement())
+  vehicleNo   String   @unique
   vehicleType String
   drivers     Driver[]
-  
+  vendorId    Int?
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
 }
 
 model Driver {
-  id          Int      @id @default(autoincrement())
-  driverName  String
-  phoneNo     String   @unique
-  vehicleId   Int
-  vendorId    Int?    
-  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
-  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
-
-  
+  id         Int     @id @default(autoincrement())
+  driverName String
+  phoneNo    String  @unique
+  vehicleId  Int
+  vehicle    Vehicle @relation(fields: [vehicleId], references: [id])
 }
 
 model Vendor {
-  id         Int      @id @default(autoincrement())
-  vendorName String 
-  vendorPh String   @unique 
-  drivers    Driver[]
-  
+  id         Int       @id @default(autoincrement())
+  vendorName String
+  vendorPh   String    @unique
+  vehicle    Vehicle[]
 }
 
 model Category {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
- 
+  id   Int    @id @default(autoincrement())
+  name String @unique
 }
 
 model Company {
   id          Int         @id @default(autoincrement())
-  companyName String @unique
+  companyName String      @unique
   customers   Customers[] // ✅ One company has many customers
 }
 
 model Customers {
-  id           Int      @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   customerName String
-  phoneNo      String @unique
-  companyId    Int      // ✅ Foreign key field
-  company      Company  @relation(fields: [companyId], references: [id] ,onDelete: Cascade) 
-}
-
-
-model address{
-   id           Int      @id @default(autoincrement())
-   addressName String
-   city      String
+  phoneNo      String  @unique
+  companyId    Int // ✅ Foreign key field
+  company      Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
