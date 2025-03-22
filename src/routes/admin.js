@@ -1,8 +1,8 @@
 import express from 'express'
-import { addTripSheet, getCompanyDetails, getFormdata, getVehicleOnly, searchVendor,  } from '../controller/UserController.js';
+import { addTripSheet, deleteCustomer, deleteDriver, getCompanyDetails, getFormdata, getVehicleOnly, searchVendor,  } from '../controller/UserController.js';
 
 import { addAdmin, createCategory, createCompany, createDriver,  createUser, 
-     createVehicle,  createVendor,fetchAdmins,  fetchCategory,  fetchDrivers,  fetchLogs,  fetchVendors,  generatelink,    getImage,getTripsByVendorAndDate,
+     createVehicle,  createVendor,fetchAdmins,  fetchApprovedTripsheet,  fetchCategory,  fetchDrivers,  fetchLogs,  fetchPendingTripsheet,  fetchRejectedTripsheet,  fetchUsersONSearchType,  fetchVendors,  generatelink,    getImage,getTripsBySearchQueryAndDate,getTripsByVendorAndDate,
      updateSignature, updateSingleField, updateTripStatus, validateGenerateLink, validateSignature, validateUser } from '../controller/adminController.js';
 import sendWhatsAppMessage, { sendSMS } from '../services/twilioService.js';
 import { createCustomer, getCustomerByCompany, login } from '../controller/authController.js';
@@ -18,15 +18,6 @@ const router = express.Router();
 
 router.post("/createUser",validateUser,createUser) // create  admin users 
 router.get('/get-signature/:imageName',getImage) // get image api to check 
-router.post('/login',validateLogin,login)// login 
-
-
-
-
-
-
-
-
 
 
 // Driver API
@@ -41,15 +32,16 @@ router.get('/message', (req,res)=>{
 });
 
 
+//  auth api 
+router.post('/login',validateLogin,login)// login 
 
 
-// 🚀 API to search vehicles by number
 // router.get("/vehicles", getVehicleDetails);
 router.get("/companys", getCompanyDetails);
 router.get("/vehicle-list",getVehicleOnly)
 router.post("/create-vehicle",createVehicle)
 router.get("/searchVendor", searchVendor);
-router.get("/trips",getTripsByVendorAndDate) // this is the   end point for  getting the trips  list 
+router.get("/trips",getTripsBySearchQueryAndDate) // this is the   end point for  getting the trips  list 
 router.get("/getCustomers", getCustomerByCompany);
 router.post("/createCustomer",createCustomer)
 router.post("/create-admin",addAdmin)
@@ -67,6 +59,14 @@ router.patch("/updateSignature",updateSignature)
 router.patch("/updateStatus",updateTripStatus)// update thetripsheet status (aprov ,reject )
 router.get("/getVendors",fetchVendors)
 router.get("/getDrivers",fetchDrivers)
+router.get("/get-pendingTrips",fetchPendingTripsheet)
+router.get("/get-approvedTrips",fetchApprovedTripsheet)
+router.get("/get-rejectedTrips",fetchRejectedTripsheet)
+router.get("/search",fetchUsersONSearchType)
+
+router.delete("/delete-driver",deleteDriver)
+router.delete("/delete-customer",deleteCustomer)
+
 
 // / API to send WhatsApp message/
 router.post('/send-message', async (req, res) => {

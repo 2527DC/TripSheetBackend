@@ -12,6 +12,7 @@ import { prisma } from "../services/prismaclient.js";
 
 export const validateGenerateLink = [
   body("acType").notEmpty().withMessage("acType is required"),
+  body("driverPh").notEmpty().withMessage("Driver Phone Number is reduired"),
   body("driver").notEmpty().withMessage("driver is required"),
   body("category").notEmpty().withMessage("category is required"),
   body("dropAddress").notEmpty().withMessage("dropAddress is required"),
@@ -63,7 +64,8 @@ export const generatelink = async (req, res) => {
     vehicleType,  
     company,
     category,
-    createdAt
+    createdAt,
+    driverPh
   } = req.body;
 
   console.log("Request Body:", req.body);
@@ -84,7 +86,8 @@ export const generatelink = async (req, res) => {
         vendorName,
         company,
         category,
-        createdAt
+        createdAt,
+        driverPh
       },
     });
 
@@ -115,8 +118,8 @@ export const generatelink = async (req, res) => {
     try {
       const newVendor = await prisma.vendor.create({
         data: {
-          vendorName,
-          vendorPh
+          name:vendorName,
+          phoneNo:vendorPh
         },
       });
 
@@ -244,7 +247,7 @@ export const updateTripStatus=async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
+    return res.status(500).json({ 
       success: false,
       message: 'Error updating user',
       error: error.message,
@@ -304,40 +307,38 @@ export const createUser = async (req, res) => {
   }
 };
 
+export const createCompany = async (req, res) => {
+  const { companyName } = req.body;
 
+  // Validation: Ensure companyName is provided
+  if (!companyName) {
+    return res.status(400).json({ message: "Company name is required" }); // ✅ `return` to stop further execution
+  }
 
-export const  createCompany=async (req,res)=>{
-const {companyName}=req.body;
-
-if (!companyName) {
-  res.status(400).json({
-    message:"company name  required "
-  })}
-  
   try {
+    // Create new company in Prisma
     const newCompany = await prisma.company.create({
-      data:{
-        companyName
-      }
-    })
-   res.status(201).json({
-    message:" company created successfully ",
-    companyName:newCompany
-   })
+      data: { name: companyName },
+    });
+
+    return res.status(201).json({
+      message: "Company created successfully",
+      company: newCompany, // ✅ Changed key to `company` (not `companyName`, as it's an object)
+    });
 
   } catch (error) {
-    if (error.code === "P2002") {
-      // Extract which field is causing the unique constraint violation
-      const duplicateFields = error.meta?.target || ["unknown field"];
-      return res.status(400).json({
-        message: `The  ${duplicateFields.join(", ")} already exist`,
-       
-      });
-    }
+    if (!res.headersSent) { // ✅ Prevents duplicate responses
+      if (error.code === "P2002") {
+        const duplicateFields = error.meta?.target || ["unknown field"];
+        return res.status(400).json({
+          message: `The ${duplicateFields.join(", ")} already exists`,
+        });
+      }
 
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+      return res.status(500).json({ message: "Something went wrong", error: error.message });
+    }
   }
-}
+};
 
 
 
@@ -545,7 +546,7 @@ export const createDriver = async (req, res) => {
 
     const driver = await prisma.driver.create({
       data: {
-        driverName,
+       name: driverName,
         phoneNo,
         vehicle: {
           connect: { id: vehicleId }, // ✅ Properly linking vehicle
@@ -602,7 +603,7 @@ export const createVehicle = async (req, res) => {
    const { adminName, email, password, role } = req.body;
     // Check if required fields are missing
     if (!adminName || !email || !password || !role) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ message: "All fields are required", adminName, email, password, role });
     }
     // ✅ Create admin
     const admin = await prisma.user.create({
@@ -733,5 +734,211 @@ export const fetchDrivers= async(req,res)=>{
       message :" something went wrong on the server ",
       error:error
     })
+  }
+}
+
+
+export const fetchPendingTripsheet = async (req, res) => {
+  try {
+    const pendingTrips = await prisma.tripSheet.findMany({
+      where: {
+        status: "Pending", // Assuming 'status' field exists and stores pending state
+      },
+    });
+
+    return res.status(200).json({ success: true, pendingTrips: pendingTrips });
+  } catch (error) {
+    console.error("Error fetching pending trip sheets:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch pending trip sheets" });
+  }
+};
+
+export const fetchApprovedTripsheet = async (req, res) => {
+  try {
+    const approvedTrips = await prisma.tripSheet.findMany({
+      where: {
+        status: "Approved", // Assuming 'status' field exists and stores pending state
+      },
+    });
+
+    return res.status(200).json({ success: true, approvedTrips: approvedTrips });
+  } catch (error) {
+    console.error("Error fetching pending trip sheets:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch pending trip sheets" });
+  }
+};
+
+
+export const fetchRejectedTripsheet = async (req, res) => {
+  try {
+    const rejectedTrips = await prisma.tripSheet.findMany({
+      where: {
+        status: "Rejected", // Assuming 'status' field exists and stores pending state
+      },
+    });
+
+    return res.status(200).json({ success: true, rejectedTrips: rejectedTrips });
+  } catch (error) {
+    console.error("Error fetching pending trip sheets:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch pending trip sheets" });
+  }
+};
+
+
+  export const fetchUsersONSearchType =async (req, res) => {
+  try {
+    const { type, query } = req.query;
+
+    if (!type || !query) {
+      return res.status(400).json({ error: "Search type and query are required" });
+    }
+
+    let results = [];
+
+    switch (type) {
+      case "Driver":
+        results = await prisma.driver.findMany({
+          where: {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+          select: { id: true, name: true },
+          take: 10, // Limit suggestions
+        });
+        break;
+
+      case "Company":
+        results = await prisma.company.findMany({
+          where: {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+          select: { id: true, name: true },
+          take: 10,
+        });
+        break;
+
+      case "Vendor":
+        results = await prisma.vendor.findMany({
+          where: {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+          select: { id: true, name: true },
+          take: 10,
+        });
+        break;
+
+      case "Customer":
+        results = await prisma.customers.findMany({
+          where: {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+          select: { id: true, name: true },
+          take: 10,
+        });
+        break;
+
+      default:
+        return res.status(400).json({ error: "Invalid search type" });
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function getTripsBySearchQueryAndDate(req, res) {
+  try {
+      const { searchQuery, fromDate, toDate, selectedStatus, selectedType } = req.query;
+
+      console.log(" this is the request " ,req.query);
+      console.log(" this is the request " ,req.body);
+      // Validate all required parameters at once
+      if (!searchQuery?.trim() || !fromDate || !toDate || !selectedType?.trim()) {
+          return res.status(400).json({ 
+              message: "Missing required parameters: searchQuery, fromDate, toDate, and selectedType are required" 
+          });
+      }
+
+      // Predefined valid types for quick validation
+      const validTypes = {
+          driver: 'driverName',
+          customer: 'customer',
+          company: 'company',
+          vendor: 'vendorName'
+      };
+
+      const searchField = validTypes[selectedType.toLowerCase()];
+      if (!searchField) {
+          return res.status(400).json({ 
+              message: "Invalid selectedType. Must be one of: driver, customer, company, vendor" 
+          });
+      }
+
+      // Convert dates once and reuse
+      const startDate = new Date(`${fromDate}T00:00:00.000Z`);
+      const endDate = new Date(`${toDate}T23:59:59.999Z`);
+
+      // Validate dates
+      if (isNaN(startDate) || isNaN(endDate) || startDate > endDate) {
+          return res.status(400).json({ 
+              message: "Invalid date range" 
+          });
+      }
+
+      // Build search condition efficiently
+      const searchCondition = {
+          [searchField]: {
+              contains: searchQuery.trim(),
+              mode: "insensitive"
+          }
+      };
+
+      // Build where clause with minimal conditions
+      const whereClause = {
+          ...searchCondition,
+          createdAt: {
+              gte: startDate,
+              lte: endDate
+          },
+          submitted: true,
+          ...(selectedStatus && selectedStatus !== "All" && {
+              status: {
+                  equals: selectedStatus,
+                  mode: "insensitive"
+              }
+          })
+      };
+
+      const trips = await prisma.tripSheet.findMany({
+          where: whereClause,
+          orderBy: { createdAt: "asc" },
+         
+      });
+
+      // Single response point with ternary
+      return res.status(200).json({
+          message: trips.length ? "Trips retrieved successfully" : "No trips found",
+          data: trips
+      });
+
+  } catch (error) {
+      console.error("Error fetching trip sheets:", error);
+      return res.status(500).json({ 
+          message: "Internal server error",
+          error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
   }
 }

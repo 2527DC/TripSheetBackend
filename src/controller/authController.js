@@ -122,7 +122,7 @@ export const login = async (req, res) => {
         // If `companyId` is missing but `companyName` is given, find by company name
         else if (companyName) {
           company = await prisma.company.findUnique({
-            where: { companyName: companyName },
+            where: { name: companyName },
           });
         }
     
@@ -134,7 +134,7 @@ export const login = async (req, res) => {
         // Create customer and connect to found company
         const customer = await prisma.customers.create({
           data: {
-            customerName,
+            name: customerName,
             phoneNo,
             company: {
               connect: { id: company.id }, // ✅ Link customer to found company

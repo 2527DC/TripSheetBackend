@@ -19,6 +19,7 @@ model TripSheet {
   id               Int        @id @default(autoincrement())
   formId           String     @unique
   driverName       String
+  driverPh         String
   vehicleNo        String
   vehicleType      String
   customer         String
@@ -27,7 +28,7 @@ model TripSheet {
   dropAddress      String
   acType           String
   createdAt        DateTime   @default(now())
-  status           String     @default("pending")
+  status           String     @default("Assigned")
   closeHr          String?
   closeKm          Float?
   guest_url        String?
@@ -70,7 +71,7 @@ model Vehicle {
 
 model Driver {
   id         Int     @id @default(autoincrement())
-  driverName String
+  name String
   phoneNo    String  @unique
   vehicleId  Int
   vehicle    Vehicle @relation(fields: [vehicleId], references: [id])
@@ -78,8 +79,8 @@ model Driver {
 
 model Vendor {
   id         Int       @id @default(autoincrement())
-  vendorName String
-  vendorPh   String    @unique
+  name String
+  phoneNo   String    @unique
   vehicle    Vehicle[]
 }
 
@@ -90,13 +91,13 @@ model Category {
 
 model Company {
   id          Int         @id @default(autoincrement())
-  companyName String      @unique
+  name String      @unique
   customers   Customers[] // ✅ One company has many customers
 }
 
 model Customers {
   id           Int     @id @default(autoincrement())
-  customerName String
+  name String
   phoneNo      String  @unique
   companyId    Int // ✅ Foreign key field
   company      Company @relation(fields: [companyId], references: [id], onDelete: Cascade)

@@ -83,7 +83,8 @@ export const addTripSheet = async (req, res) => {
         parkingCharges: parkingCharges ? parseFloat(parkingCharges) : null,
         toolCharges: toolCharges ? parseFloat(toolCharges) : null,
         submitted: true,
-        review:rating
+        review:rating,
+        status:"Pending"
 
       },
     });
@@ -174,7 +175,7 @@ export const getVehicleOnly = async (req, res) => {
         drivers:true, 
         vendor: {
           select: {
-            vendorName: true, // Fetch vendor name
+            name: true, // Fetch vendor name
           },
         },
       },
@@ -196,12 +197,12 @@ console.log("the method  getComapany details got invoked");
   try {
     const vehicles = await prisma.company.findMany({
       where: {
-        companyName: {
+        name: {
           contains: search, // 🔥 Fetch vehicles matching search input
           mode: "insensitive", // Case insensitive search
         },
       },
-      take: 10, // 🔥 Limit results to 10 for performance
+      
       include:{
         customers:true
        }
@@ -222,7 +223,7 @@ console.log("the method  search vendor  got  invoked");
   try {
     const vehicles = await prisma.vendor.findMany({
       where: {
-      vendorName: {
+     name: {
           contains: search, // 🔥 Fetch vehicles matching search input
           mode: "insensitive", // Case insensitive search
         },
@@ -236,3 +237,89 @@ console.log("the method  search vendor  got  invoked");
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+
+export const deleteDriver = async (req, res) => {
+  try {
+    const { driverId } = req.query
+    // Ensure driverId is provided
+    if (!driverId) {
+      return res.status(400).json({ success: false, error: "Driver ID is required" });
+    }
+    const id = parseInt(driverId, 10);
+
+    // Validate if the conversion was successful
+    if (isNaN(id)) {
+      return res.status(400).json({ success: false, error: "Invalid Driver ID" });
+    }
+    // Delete driver by ID
+    const deletedDriver = await prisma.driver.delete({
+      where: { id:id },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Driver deleted successfully",
+      data: deletedDriver,
+    });
+  } catch (error) {
+    console.error("Error deleting driver:", error);
+
+    // Handle specific Prisma errors
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        success: false,
+        error: "Driver not found",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+};
+
+
+
+
+export const deleteCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.query
+    // Ensure driverId is provided
+    if (!customerId) {
+      return res.status(400).json({ success: false, error: "Driver ID is required" });
+    }
+    const id = parseInt(customerId, 10);
+
+    // Validate if the conversion was successful
+    if (isNaN(id)) {
+      return res.status(400).json({ success: false, error: "Invalid Driver ID" });
+    }
+    // Delete driver by ID
+    const deletedCustomer = await prisma.customers.delete({
+      where: { id:id },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Customer deleted successfully",
+      data: deleteCustomer,
+    });
+  } catch (error) {
+    console.error("Error deleting driver:", error);
+
+    // Handle specific Prisma errors
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        success: false,
+        error: "Driver not found",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+};
