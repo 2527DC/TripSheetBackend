@@ -3,6 +3,8 @@ import { addTripSheet, deleteCustomer, deleteDriver, getCompanyDetails, getFormd
 
 import { addAdmin, createCategory, createCompany, createDriver,  createUser, 
      createVehicle,  createVendor,fetchAdmins,  fetchApprovedTripsheet,  fetchCategory,  fetchDrivers,  fetchLogs,  fetchPendingTripsheet,  fetchRejectedTripsheet,  fetchUsersONSearchType,  fetchVendors,  generatelink,    getImage,getTripsBySearchQueryAndDate,getTripsByVendorAndDate,
+     updateCustomer,
+     updateDriver,
      updateSignature, updateSingleField, updateTripStatus, validateGenerateLink, validateSignature, validateUser } from '../controller/adminController.js';
 import sendWhatsAppMessage, { sendSMS } from '../services/twilioService.js';
 import { createCustomer, getCustomerByCompany, login } from '../controller/authController.js';
@@ -66,8 +68,8 @@ router.get("/search",fetchUsersONSearchType)
 
 router.delete("/delete-driver",deleteDriver)
 router.delete("/delete-customer",deleteCustomer)
-
-
+router.patch("/edit-customer",updateCustomer)
+router.patch("/update-driver",updateDriver)
 // / API to send WhatsApp message/
 router.post('/send-message', async (req, res) => {
     const { phone, message } = req.body;

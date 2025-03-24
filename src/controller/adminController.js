@@ -942,3 +942,93 @@ export async function getTripsBySearchQueryAndDate(req, res) {
       });
   }
 }
+
+
+
+export const updateDriver = async (req, res) => {
+  try {
+    const { driverId, driverName, phoneNo, vehicleId } = req.body;
+
+    // Validate required fields
+    if (!driverId || !driverName || !phoneNo || !vehicleId) {
+      return res.status(400).json({ success: false, error: "All fields are required" });
+    }
+
+    // Update driver
+    const updatedDriver = await prisma.driver.update({
+      where: { id: driverId }, // Match driver by ID
+      data: {
+        name: driverName,
+        phoneNo: phoneNo,
+        vehicleId: vehicleId,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Driver updated successfully",
+      data: updatedDriver,
+    });
+
+  } catch (error) {
+    console.error("Error updating driver:", error);
+
+    // Handle Prisma Unique Constraint Error (P2002)
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        success: false,
+        error: "Phone number already exists. Please use a different phone number.",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+};
+
+
+
+export const updateCustomer = async (req, res) => {
+  try {
+    const { customerId, customerName, phoneNo, } = req.body;
+
+    // Validate required fields
+    if (!customerId || !customerName || !phoneNo ) {
+      return res.status(400).json({ success: false, error: "All fields are required" });
+    }
+
+    // Update driver
+    const updatedDriver = await prisma.customers.update({
+      where: { id: customerId }, // Match driver by ID
+      data: {
+        name: customerName,
+        phoneNo: phoneNo,
+  
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Driver updated successfully",
+      data: updatedDriver,
+    });
+
+  } catch (error) {
+    console.error("Error updating driver:", error);
+
+    // Handle Prisma Unique Constraint Error (P2002)
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        success: false,
+        error: "Phone number already exists. Please use a different phone number.",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+};
