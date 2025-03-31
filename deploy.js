@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Get __dirname in ES module
+// Get __dirname in ES module 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const logDir = "/var/www/TripSheetBackend";
 const logFile = path.join(logDir, "deploy.log");
