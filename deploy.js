@@ -54,3 +54,9 @@ try {
   log("❌ Deployment failed: " + error.message);
   process.exit(1);
 }
+
+// DATABASE_URL="postgresql://chethan:chethan@123@localhost:6432/tripsheet"
+
+// DATABASE_URL_MIGRATION="postgresql://chethan:chethan@123@localhost:5432/tripsheet"
+
+
