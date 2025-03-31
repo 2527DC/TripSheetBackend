@@ -39,9 +39,9 @@ try {
   log("📦 Installing dependencies...");
   execSync("npm install", { stdio: "inherit" });
 
-  // Run Prisma commands
+  // Run Prisma commands with explicit database URLs
   log("🛠️ Running Prisma migrations...");
-  execSync(`export DATABASE_URL="${process.env.DATABASE_URL_MIGRATION}" && npx prisma migrate deploy`, { stdio: "inherit" });
+  execSync(`DATABASE_URL="postgresql://chethan:chethan%40123@localhost:5432/tripsheet" npx prisma migrate deploy`, { stdio: "inherit" });
   execSync("npx prisma db pull", { stdio: "inherit" });
   execSync("npx prisma generate", { stdio: "inherit" });
 
