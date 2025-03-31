@@ -718,6 +718,8 @@ export const fetchCategory= async(req,res)=>{
       res.status(200).json(category)
     }
   } catch (error) {
+    console.log("Error " ,error);
+    
     res.status(500).json({
       message :" something went wrong on the server ",
       error:error
