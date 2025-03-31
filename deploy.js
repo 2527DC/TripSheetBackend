@@ -42,7 +42,7 @@ try {
   // Check if Prisma migrations have been applied
   log("🛠️ Checking and applying Prisma migrations...");
   try {
-    execSync(`DATABASE_URL="postgresql://chethan:chethan%40123@localhost:5432/tripsheet" npx prisma migrate deploy`, { stdio: "inherit" });
+    execSync(`DATABASE_URL="postgresql://chethan:chethan%40123@localhost:5432/tripsheet" npx prisma db push`, { stdio: "inherit" });
   } catch (migrationError) {
     log("⚠️ Migration failed, attempting baseline...");
     execSync(`DATABASE_URL="postgresql://chethan:chethan%40123@localhost:5432/tripsheet" npx prisma migrate resolve --applied "20250328070337_alterd_datatye_tripsheet"`, { stdio: "inherit" });
