@@ -3,7 +3,7 @@ name: CI/CD for Express.js on VPS
 on:
   push:
     branches:
-      - main  # Trigger when code is pushed to the main branch
+      - main
 
 jobs:
   deploy:
@@ -22,21 +22,5 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             cd /var/www/TripSheetBackend
-            git fetch --all
-            git reset --hard origin/main
-            git pull origin main
-            npm install
-
-            # Run Prisma Commands
-            DATABASE_URL=${{ secrets.DATABASE_URL_MIGRATION }} npx prisma migrate deploy
-            npx prisma db pull
-            npx prisma generate
-            
-            pm2 restart myapp
-           
-            
-             
-           
-            
-            pm2 save
+            node deploy.js
           EOF
