@@ -21,7 +21,7 @@ jobs:
       - name: Deploy code to VPS
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            cd /var/www/TripSheetBackend
-            export $(cat .env | xargs)  # Load environment variables
-            node deploy.js
-           EOF
+          cd /var/www/TripSheetBackend
+          set -a; source .env; set +a  # Load environment variables safely
+          node deploy.js
+          EOF
