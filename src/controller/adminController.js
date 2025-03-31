@@ -13,7 +13,8 @@ import { prisma } from "../services/prismaclient.js";
 export const validateGenerateLink = [
   body("acType").notEmpty().withMessage("acType is required"),
   body("driverPh").notEmpty().withMessage("Driver Phone Number is reduired"),
-  body("driver").notEmpty().withMessage("driver is required"),
+  body("city").notEmpty().withMessage("City Needed"),
+  body("driver").notEmpty().withMessage("Driver is required"),
   body("category").notEmpty().withMessage("category is required"),
   body("dropAddress").notEmpty().withMessage("dropAddress is required"),
   body("customer").notEmpty().withMessage("passengerName is required"),
@@ -30,6 +31,15 @@ export const validateGenerateLink = [
   body("reportingTime").notEmpty().withMessage("reportingTime is required"),
   body("vehicleType").notEmpty().withMessage("vehicleType is required"),
   body("company").notEmpty().withMessage("company is required"),
+  body("companyId").notEmpty().withMessage("companyId is required"),
+  body("categoryId").notEmpty().withMessage("companyId is required"),
+  body("driverId").notEmpty().withMessage("driverId is required"),
+  body("vehicleId").notEmpty().withMessage("vehicleId is required"),
+  body("vendorId").notEmpty().withMessage("vendorId is required"),
+  body("customerId").notEmpty().withMessage("customerId is required"),
+
+  
+
 ];
 
 export const generatelink = async (req, res) => {
@@ -65,7 +75,16 @@ export const generatelink = async (req, res) => {
     company,
     category,
     createdAt,
-    driverPh
+    driverPh,
+    city,
+    vendorId,
+    vehicleId,
+    categoryId,
+    companyId,
+    customerId,
+    driverId,
+
+    
   } = req.body;
 
   console.log("Request Body:", req.body);
@@ -87,7 +106,13 @@ export const generatelink = async (req, res) => {
         company,
         category,
         createdAt,
-        driverPh
+        driverPh,
+        city,
+        vendorId,
+        vehicleId,
+        categoryId,
+        companyId,
+        customerId,driverId
       },
     });
 
@@ -417,6 +442,8 @@ export const validateSignature = [
     .withMessage("Form ID must be a valid integer."),
 ];
 
+
+
 export const updateSignature = async (req, res) => {
   // Check for validation errors
   const errors = validationResult(req);
@@ -650,27 +677,38 @@ export const fetchAdmins= async(req,res)=>{
   
 }
 
-export const createCategory= async(req,res)=>{
 
+export const createCategory = async (req, res) => {
   try {
-    const {category}=req.body
-    const created= await prisma.category.create({
-      data:{
-        name:category
-      }
-    })
+    const { category, hours, KM } = req.body;
 
-    if (created) {
-      res.status(201).json(created)
+    // Validate required fields
+    if (!category) {
+      return res.status(400).json({ message: "Category name is required" });
     }
-  } catch (error) {
-    res.status(500).json({
-      message :" something went wrong on the server ",
-      error:error
-    })
-  }  
-}
 
+    // Create category (without checking manually for duplicates)
+    const created = await prisma.category.create({
+      data: {
+        name:category,
+        hours: hours ?? null, // Optional field
+        KM: KM ?? null,       // Optional field
+      },
+    });
+
+    res.status(201).json({ message: "Category created successfully", category: created });
+
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return res.status(400).json({ message: "Category already exists" });
+    }
+
+    res.status(500).json({
+      message: "Something went wrong on the server",
+      error: error.message,
+    });
+  }
+};
 export const fetchCategory= async(req,res)=>{
 
   try {
@@ -1024,6 +1062,50 @@ export const updateCustomer = async (req, res) => {
         success: false,
         error: "Phone number already exists. Please use a different phone number.",
       });
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+};
+
+
+export const updatePassword = async (req, res) => {
+  try {
+    const { adminId,password} = req.body;
+console.log(" this is the body ",req.body);
+
+    // Validate required fields
+    if (!adminId || !password ) {
+      return res.status(400).json({ success: false, error: "All fields are required" });
+    }
+
+    // Update driver
+    const updatedDriver = await prisma.user.update({
+      where: { id: adminId}, // Match driver by ID
+      data: {
+       password
+  
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Driver updated successfully",
+      data: updatedDriver,
+    });
+
+  } catch (error) {
+    console.error("Error updating driver:", error);
+
+    // Handle Prisma Unique Constraint Error (P2002)
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        success: false,
+        error: "Phone number already exists. Please use a different phone number.",
+      }); 
     }
 
     return res.status(500).json({

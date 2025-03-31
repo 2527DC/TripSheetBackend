@@ -15,6 +15,18 @@ model User {
   role     String
 }
 
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  tripSheetId Int // Reference to TripSheet
+  editedBy    String // Name or ID of the user who made the change
+  fieldName   String // The field that was edited
+  oldValue    String? // The previous value (before edit)
+  newValue    String? // The updated value (after edit)
+  editedAt    DateTime @default(now()) // Timestamp of the change
+
+  tripSheet TripSheet @relation(fields: [tripSheetId], references: [id], onDelete: Cascade)
+}
+
 model TripSheet {
   id               Int        @id @default(autoincrement())
   formId           String     @unique
@@ -44,20 +56,32 @@ model TripSheet {
   vendorName       String?
   category         String
   review           Int?
-  auditLogs        AuditLog[] // ✅ Add this relation field to link `AuditLog`
+  auditLogs        AuditLog[] // ✅ Relationship with AuditLog
   edit             Boolean    @default(false)
-}
+  extraHr          Int?
+  extraKm          Int?
+  city             String
+  driverSubmitted  DateTime?
+  closingDate      String?
 
-model AuditLog {
-  id          Int      @id @default(autoincrement())
-  tripSheetId Int // Reference to TripSheet
-  editedBy    String // Name or ID of the user who made the change
-  fieldName   String // The field that was edited
-  oldValue    String? // The previous value (before edit)
-  newValue    String? // The updated value (after edit)
-  editedAt    DateTime @default(now()) // Timestamp of the change
+  // ✅ Relations
+  driverId        Int?
+  driver          Driver?  @relation(fields: [driverId], references: [id], onDelete: SetNull)
 
-  tripSheet TripSheet @relation(fields: [tripSheetId], references: [id], onDelete: Cascade)
+  vehicleId       Int?
+  vehicle         Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+
+  vendorId        Int?
+  vendor          Vendor?  @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  categoryId      Int?
+  categoryRel     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  companyId       Int?
+  companyRel      Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  customerId      Int?
+  customerRel     Customers? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 }
 
 model Vehicle {
@@ -66,39 +90,47 @@ model Vehicle {
   vehicleType String
   drivers     Driver[]
   vendorId    Int?
-  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  tripSheets  TripSheet[] // ✅ One vehicle can have multiple trips
 }
 
 model Driver {
-  id         Int     @id @default(autoincrement())
-  name String
-  phoneNo    String  @unique
-  vehicleId  Int
-  vehicle    Vehicle @relation(fields: [vehicleId], references: [id])
+  id        Int      @id @default(autoincrement())
+  name      String
+  phoneNo   String   @unique
+  vehicleId Int
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  tripSheets TripSheet[] // ✅ One driver can have multiple trips
 }
 
 model Vendor {
-  id         Int       @id @default(autoincrement())
-  name String
-  phoneNo   String    @unique
-  vehicle    Vehicle[]
+  id      Int        @id @default(autoincrement())
+  name    String
+  phoneNo String     @unique
+  vehicle Vehicle[]
+  tripSheets TripSheet[] // ✅ One vendor can have multiple trips
 }
 
 model Category {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  hours Int?
+  KM    Int?
+  tripSheets TripSheet[] // ✅ One category can have multiple trips
 }
 
 model Company {
-  id          Int         @id @default(autoincrement())
-  name String      @unique
-  customers   Customers[] // ✅ One company has many customers
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  customers Customers[] // ✅ One company has many customers
+  tripSheets TripSheet[] // ✅ One company can have multiple trips
 }
 
 model Customers {
-  id           Int     @id @default(autoincrement())
-  name String
-  phoneNo      String  @unique
-  companyId    Int // ✅ Foreign key field
-  company      Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id        Int     @id @default(autoincrement())
+  name      String
+  phoneNo   String  @unique
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  tripSheets TripSheet[] // ✅ One customer can have multiple trips
 }

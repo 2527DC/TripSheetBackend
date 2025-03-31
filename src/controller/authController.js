@@ -107,9 +107,12 @@ export const login = async (req, res) => {
 
 
     export const createCustomer = async (req, res) => {
+      console.log("method of customer create got  invoked  ",req.query);
       try {
         const { companyId, companyName } = req.query; // ✅ Extract from query params
         const { customerName, phoneNo } = req.body; // ✅ Keep customer data in the body
+    console.log(" this is the query  ",req.query);
+    console.log(" this is the query  ",req.body);
     
         let company;
     

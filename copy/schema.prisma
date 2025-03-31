@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
+  role     String
+}
+
+model TripSheet {
+  id               Int        @id @default(autoincrement())
+  formId           String     @unique
+  driverName       String
+  driverPh         String
+  vehicleNo        String
+  vehicleType      String
+  customer         String
+  customerPh       String
+  reportingAddress String
+  dropAddress      String
+  acType           String
+  createdAt        DateTime   @default(now())
+  status           String     @default("Assigned")
+  closeHr          String?
+  closeKm          Float?
+  guest_url        String?
+  openHr           String?
+  openKm           Float?
+  totalKm          Float?
+  parkingCharges   Float?
+  toolCharges      Float?
+  company          String
+  submitted        Boolean    @default(false)
+  totalHr          String?
+  reportingTime    String
+  vendorName       String?
+  category         String
+  review           Int?
+  auditLogs        AuditLog[] // ✅ Add this relation field to link `AuditLog`
+  edit             Boolean    @default(false)
+  extraHr          String?
+  extraKm          String?
+  city             String
+  driverSubmitted  DateTime?
+  closingDate      DateTime?
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  tripSheetId Int // Reference to TripSheet
+  editedBy    String // Name or ID of the user who made the change
+  fieldName   String // The field that was edited
+  oldValue    String? // The previous value (before edit)
+  newValue    String? // The updated value (after edit)
+  editedAt    DateTime @default(now()) // Timestamp of the change
+
+  tripSheet TripSheet @relation(fields: [tripSheetId], references: [id], onDelete: Cascade)
+}
+
+model Vehicle {
+  id          Int      @id @default(autoincrement())
+  vehicleNo   String   @unique
+  vehicleType String
+  drivers     Driver[]
+  vendorId    Int?
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
+}
+
+model Driver {
+  id        Int     @id @default(autoincrement())
+  name      String
+  phoneNo   String  @unique
+  vehicleId Int
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+}
+
+model Vendor {
+  id      Int       @id @default(autoincrement())
+  name    String
+  phoneNo String    @unique
+  vehicle Vehicle[]
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  hours Int?
+  KM    Int?
+}
+
+model Company {
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  customers Customers[] // ✅ One company has many customers
+}
+
+model Customers {
+  id        Int     @id @default(autoincrement())
+  name      String
+  phoneNo   String  @unique
+  companyId Int // ✅ Foreign key field
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}

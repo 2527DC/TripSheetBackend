@@ -8,20 +8,21 @@ export const addTripSheet = async (req, res) => {
   try {
     const { 
    
-      Guestsignature, 
-      openKm, 
-      openHr, 
-      closeKm, 
-      closeHr, 
-      totalKm,
-      totalHr,   // Added this 
+      Guestsignature,   openKm,  openHr, closeKm, closeHr,  totalKm,totalHr,  
       formId, 
       parkingCharges, 
       toolCharges,
-      rating
+      rating, 
+      categoryHr,
+      categoryKm,
+      closeDate
     } = req.body;
+    const totalHrInt = parseInt(totalHr.split(":")[0], 10);
 
-    console.log("Received TripSheet request:", req.body);
+    const extraHr=totalHrInt>categoryHr ?totalHrInt-categoryHr:0
+    const extraKm=totalKm>categoryKm?totalKm-categoryKm:0
+
+  
 
     if (totalHr) {
       console.log("Total hours provided:", totalHr);
@@ -84,7 +85,12 @@ export const addTripSheet = async (req, res) => {
         toolCharges: toolCharges ? parseFloat(toolCharges) : null,
         submitted: true,
         review:rating,
-        status:"Pending"
+        status:"Pending",
+        extraHr,
+        extraKm,
+        closingDate: closeDate,
+        driverSubmitted: new Date() // ✅ Sets current timestamp
+
 
       },
     });
@@ -136,6 +142,9 @@ export  const getFormdata =async (req, res) => {
     // Query the database to find the trip sheet by formId
     const tripSheet = await prisma.tripSheet.findUnique({
       where: { formId: formId },
+      include:{
+        categoryRel:true
+      }
     });
 
     if (tripSheet) {
@@ -305,6 +314,50 @@ export const deleteCustomer = async (req, res) => {
       success: true,
       message: "Customer deleted successfully",
       data: deleteCustomer,
+    });
+  } catch (error) {
+    console.error("Error deleting driver:", error);
+
+    // Handle specific Prisma errors
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        success: false,
+        error: "Driver not found",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+};
+
+
+
+
+export const deleteAdmin = async (req, res) => {
+  try {
+    const { id } = req.params
+    // Ensure driverId is provided
+    if (!id) {
+      return res.status(400).json({ success: false, error: "Driver ID is required" });
+    }
+    const Id = parseInt(id, 10);
+
+    // Validate if the conversion was successful
+    if (isNaN(Id)) {
+      return res.status(400).json({ success: false, error: "Invalid Driver ID" });
+    }
+    // Delete driver by ID
+    const deletedAdmin= await prisma.user.delete({
+      where: { id:Id },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Driver deleted successfully",
+      data: deletedAdmin,
     });
   } catch (error) {
     console.error("Error deleting driver:", error);

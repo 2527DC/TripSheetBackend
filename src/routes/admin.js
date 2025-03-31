@@ -1,10 +1,11 @@
 import express from 'express'
-import { addTripSheet, deleteCustomer, deleteDriver, getCompanyDetails, getFormdata, getVehicleOnly, searchVendor,  } from '../controller/UserController.js';
+import { addTripSheet, deleteAdmin, deleteCustomer, deleteDriver, getCompanyDetails, getFormdata, getVehicleOnly, searchVendor,  } from '../controller/UserController.js';
 
 import { addAdmin, createCategory, createCompany, createDriver,  createUser, 
      createVehicle,  createVendor,fetchAdmins,  fetchApprovedTripsheet,  fetchCategory,  fetchDrivers,  fetchLogs,  fetchPendingTripsheet,  fetchRejectedTripsheet,  fetchUsersONSearchType,  fetchVendors,  generatelink,    getImage,getTripsBySearchQueryAndDate,getTripsByVendorAndDate,
      updateCustomer,
      updateDriver,
+     updatePassword,
      updateSignature, updateSingleField, updateTripStatus, validateGenerateLink, validateSignature, validateUser } from '../controller/adminController.js';
 import sendWhatsAppMessage, { sendSMS } from '../services/twilioService.js';
 import { createCustomer, getCustomerByCompany, login } from '../controller/authController.js';
@@ -29,6 +30,7 @@ router.get("/form/:formId", getFormdata); // get the form details to driver
 
 //  checking api 
 router.get('/get-signature/:imageName',getImage) // get image api to check 
+
 router.get('/message', (req,res)=>{
     res.send(" Hi man sucessfull made te changes and applied cicd V7 ")
 });
@@ -65,11 +67,14 @@ router.get("/get-pendingTrips",fetchPendingTripsheet)
 router.get("/get-approvedTrips",fetchApprovedTripsheet)
 router.get("/get-rejectedTrips",fetchRejectedTripsheet)
 router.get("/search",fetchUsersONSearchType)
-
+router.delete("/delete-admin/:id",deleteAdmin)
 router.delete("/delete-driver",deleteDriver)
 router.delete("/delete-customer",deleteCustomer)
 router.patch("/edit-customer",updateCustomer)
 router.patch("/update-driver",updateDriver)
+router.patch("/update-password",updatePassword)
+
+
 // / API to send WhatsApp message/
 router.post('/send-message', async (req, res) => {
     const { phone, message } = req.body;
