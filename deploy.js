@@ -1,38 +1,56 @@
 import { execSync } from "child_process";
-import { appendFileSync } from "fs";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const logFile = "/var/www/TripSheetBackend/deploy.log";
+// Get __dirname in ES module
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const logDir = "/var/www/TripSheetBackend";
+const logFile = path.join(logDir, "deploy.log");
 
-const log = (message) => {
+// Ensure the directory exists before writing
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+
+// Ensure the file exists before writing
+if (!fs.existsSync(logFile)) {
+  fs.writeFileSync(logFile, "", "utf8");
+}
+
+function log(message) {
   const timestamp = new Date().toISOString();
   const logMessage = `[${timestamp}] ${message}\n`;
-  appendFileSync(logFile, logMessage, "utf8");
+  fs.appendFileSync(logFile, logMessage, "utf8");
   console.log(message);
-};
+}
 
 try {
   log("🚀 Starting deployment...");
 
+  // Navigate to project directory
+  execSync("cd /var/www/TripSheetBackend", { stdio: "inherit" });
+
   // Fetch latest code
   log("📥 Pulling latest code from Git...");
-  execSync(`git fetch --all && git reset --hard origin/main && git pull origin main 2>&1 | tee -a ${logFile}`, { stdio: "inherit" });
+  execSync("git fetch --all && git reset --hard origin/main && git pull origin main", { stdio: "inherit" });
 
   // Install dependencies
   log("📦 Installing dependencies...");
-  execSync(`npm install 2>&1 | tee -a ${logFile}`, { stdio: "inherit" });
+  execSync("npm install", { stdio: "inherit" });
 
   // Run Prisma commands
   log("🛠️ Running Prisma migrations...");
-  execSync(`export DATABASE_URL="${process.env.DATABASE_URL_MIGRATION}" && npx prisma migrate deploy 2>&1 | tee -a ${logFile}`, { stdio: "inherit" });
-  execSync(`npx prisma db pull 2>&1 | tee -a ${logFile}`, { stdio: "inherit" });
-  execSync(`npx prisma generate 2>&1 | tee -a ${logFile}`, { stdio: "inherit" });
+  execSync(`export DATABASE_URL="${process.env.DATABASE_URL_MIGRATION}" && npx prisma migrate deploy`, { stdio: "inherit" });
+  execSync("npx prisma db pull", { stdio: "inherit" });
+  execSync("npx prisma generate", { stdio: "inherit" });
 
   // Restart application with PM2
   log("🔄 Restarting PM2 process...");
-  execSync(`pm2 restart myapp && pm2 save 2>&1 | tee -a ${logFile}`, { stdio: "inherit" });
+  execSync("pm2 restart myapp && pm2 save", { stdio: "inherit" });
 
   log("✅ Deployment completed successfully!");
 } catch (error) {
-  log(`❌ Deployment failed: ${error.message}`);
+  log("❌ Deployment failed: " + error.message);
   process.exit(1);
 }
