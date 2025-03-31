@@ -39,10 +39,18 @@ try {
   log("📦 Installing dependencies...");
   execSync("npm install", { stdio: "inherit" });
 
-  // Run Prisma commands with explicit database URLs
-  log("🛠️ Running Prisma migrations...");
-  execSync(`DATABASE_URL="postgresql://chethan:chethan%40123@localhost:5432/tripsheet" npx prisma migrate deploy`, { stdio: "inherit" });
-  execSync("npx prisma db pull", { stdio: "inherit" });
+  // Check if Prisma migrations have been applied
+  log("🛠️ Checking and applying Prisma migrations...");
+  try {
+    execSync(`DATABASE_URL="postgresql://chethan:chethan%40123@localhost:5432/tripsheet" npx prisma migrate deploy`, { stdio: "inherit" });
+  } catch (migrationError) {
+    log("⚠️ Migration failed, attempting baseline...");
+    execSync(`DATABASE_URL="postgresql://chethan:chethan%40123@localhost:5432/tripsheet" npx prisma migrate resolve --applied "20250328070337_alterd_datatye_tripsheet"`, { stdio: "inherit" });
+    execSync(`DATABASE_URL="postgresql://chethan:chethan%40123@localhost:5432/tripsheet" npx prisma db push`, { stdio: "inherit" });
+  }
+
+  // Generate Prisma client
+  log("⚙️ Generating Prisma Client...");
   execSync("npx prisma generate", { stdio: "inherit" });
 
   // Restart application with PM2
@@ -54,9 +62,3 @@ try {
   log("❌ Deployment failed: " + error.message);
   process.exit(1);
 }
-
-// DATABASE_URL="postgresql://chethan:chethan@123@localhost:6432/tripsheet"
-
-// DATABASE_URL_MIGRATION="postgresql://chethan:chethan@123@localhost:5432/tripsheet"
-
-
