@@ -17,7 +17,7 @@ try {
   execSync("cd /var/www/TripSheetBackend", { stdio: "inherit" });
 
   // Fetch latest code
-  log("📥 Pulling latest code from Git...");
+  log("📥 Pulling latest code from Git..    .");
   execSync("git fetch --all && git reset --hard origin/main && git pull origin main 2>&1 | tee -a " + logFile, { stdio: "inherit" });
 
   // Install dependencies
