@@ -72,8 +72,7 @@ router.delete("/delete-driver",deleteDriver)
 router.delete("/delete-customer",deleteCustomer)
 router.patch("/edit-customer",updateCustomer)
 router.patch("/update-driver",updateDriver)
-router.patch("/update-password",updatePassword)
-
+router.patch("/update-password",updatePassword)// update  password
 
 // / API to send WhatsApp message/
 router.post('/send-message', async (req, res) => {
