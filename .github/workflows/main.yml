@@ -28,7 +28,7 @@ jobs:
             npm install
 
             # Run Prisma Commands
-            npx prisma db push
+            DATABASE_URL=${{ secrets.DATABASE_URL_MIGRATION }} npx prisma migrate deploy
             npx prisma db pull
             npx prisma generate
             
