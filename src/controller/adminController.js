@@ -699,7 +699,7 @@ export const createCategory = async (req, res) => {
     res.status(201).json({ message: "Category created successfully", category: created });
 
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (error.code === "P2002") {
       return res.status(400).json({ message: "Category already exists" });
     }
 
@@ -709,6 +709,7 @@ export const createCategory = async (req, res) => {
     });
   }
 };
+
 export const fetchCategory= async(req,res)=>{
 
   try {
