@@ -62,6 +62,7 @@ model TripSheet {
   extraKm          Int?
   city             String
   driverSubmitted  DateTime?
+  reportingDate    String? 
   closingDate      String?
 
   // ✅ Relations

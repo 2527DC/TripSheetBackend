@@ -37,6 +37,7 @@ export const validateGenerateLink = [
   body("vehicleId").notEmpty().withMessage("vehicleId is required"),
   body("vendorId").notEmpty().withMessage("vendorId is required"),
   body("customerId").notEmpty().withMessage("customerId is required"),
+  body("reportingDate").notEmpty().withMessage("reportingDate is required"),
 
   
 
@@ -83,6 +84,7 @@ export const generatelink = async (req, res) => {
     companyId,
     customerId,
     driverId,
+    reportingDate
 
     
   } = req.body;
@@ -112,7 +114,8 @@ export const generatelink = async (req, res) => {
         vehicleId,
         categoryId,
         companyId,
-        customerId,driverId
+        customerId,driverId,
+        reportingDate
       },
     });
 
