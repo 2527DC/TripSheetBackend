@@ -1,8 +1,8 @@
 import express from 'express'
-import { addTripSheet, deleteAdmin, deleteCustomer, deleteDriver, getCompanyDetails, getFormdata, getVehicleOnly, searchVendor,  } from '../controller/UserController.js';
+import { addTripSheet, deleteAdmin, deleteCustomer, deleteDriver, getCompanyDetails, getFormdata, getVehicleOnly, searchVendor, updateGuestSignature, updateOpenDetails,  } from '../controller/UserController.js';
 
 import { addAdmin, createCategory, createCompany, createDriver,  createUser, 
-     createVehicle,  createVendor,fetchAdmins,  fetchApprovedTripsheet,  fetchCategory,  fetchDrivers,  fetchLogs,  fetchPendingTripsheet,  fetchRejectedTripsheet,  fetchUsersONSearchType,  fetchVendors,  generatelink,    getImage,getTripsBySearchQueryAndDate,getTripsByVendorAndDate,
+     createVehicle,  createVendor,fetchAdmins,  fetchApprovedTripsheet,  fetchAssignedTripList,  fetchCategory,  fetchDrivers,  fetchLogs,  fetchPendingTripsheet,  fetchRejectedTripsheet,  fetchUsersONSearchType,  fetchVendors,  generatelink,    getImage,getTripsBySearchQueryAndDate,getTripsByVendorAndDate,
      updateCustomer,
      updateDriver,
      updatePassword,
@@ -26,7 +26,8 @@ router.get('/get-signature/:imageName',getImage) // get image api to check
 // Driver API
 router.patch('/addtripsheet',validateSignature,addTripSheet) //  Driver updating the tripss 
 router.get("/form/:formId", getFormdata); // get the form details to driver 
-
+router.patch("/updateOpenKm",updateOpenDetails)
+router.patch("/updateGuestSignature",updateGuestSignature)
 
 //  checking api 
 router.get('/get-signature/:imageName',getImage) // get image api to check 
@@ -37,7 +38,7 @@ router.get('/message', (req,res)=>{
 
 
 //  auth api 
-router.post('/login',validateLogin,login)// login 
+router.post('/login',validateLogin,login)// login   
 
 
 // router.get("/vehicles", getVehicleDetails);
@@ -73,6 +74,9 @@ router.delete("/delete-customer",deleteCustomer)
 router.patch("/edit-customer",updateCustomer)
 router.patch("/update-driver",updateDriver)
 router.patch("/update-password",updatePassword)// update  password
+router.get("/getAssigned",fetchAssignedTripList)
+
+
 
 // / API to send WhatsApp message/
 router.post('/send-message', async (req, res) => {

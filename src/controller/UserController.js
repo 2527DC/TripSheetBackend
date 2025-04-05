@@ -8,7 +8,7 @@ export const addTripSheet = async (req, res) => {
   try {
     const { 
    
-      Guestsignature,   openKm,  openHr, closeKm, closeHr,  totalKm,totalHr,  
+       closeKm, closeHr,  totalKm,totalHr,  
       formId, 
       parkingCharges, 
       toolCharges,
@@ -33,10 +33,7 @@ export const addTripSheet = async (req, res) => {
     // ✅ Step 1: Check for missing fields and list them
     let missingFields = [];
 
-   
-    if (!Guestsignature) missingFields.push("Guestsignature");
-    if (!openKm) missingFields.push("openKm");
-    if (!openHr) missingFields.push("openHr");
+
     if (!closeKm) missingFields.push("closeKm");
     if (!closeHr) missingFields.push("closeHr");
     if (!totalKm) missingFields.push("totalKm");
@@ -50,12 +47,7 @@ export const addTripSheet = async (req, res) => {
 
     // ✅ Step 2: Save Signatures as Images
     
-    const guestSignatureFileName = saveSignatureImage(Guestsignature, "guest");
-
-    if ( !guestSignatureFileName) {
-      return res.status(500).json({ message: "Failed to save signatures" });
-    }
-
+  
     // ✅ Step 3: Check if Form Exists & Is Already Submitted
     const existingTrip = await prisma.tripSheet.findUnique({
       where: { formId: formId },
@@ -74,13 +66,12 @@ export const addTripSheet = async (req, res) => {
     const updatedTrip = await prisma.tripSheet.update({
       where: { formId: formId },
       data: {
-        openKm,
-        openHr,
+      
         closeKm,
         closeHr,
         totalKm,
         totalHr, // Added this 
-        guest_url: guestSignatureFileName,
+      
         parkingCharges: parkingCharges ? parseFloat(parkingCharges) : null,
         toolCharges: toolCharges ? parseFloat(toolCharges) : null,
         submitted: true,
@@ -373,6 +364,78 @@ export const deleteAdmin = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: "Internal Server Error",
+    });
+  }
+};
+
+
+export const updateOpenDetails=async(req,res)=>{
+
+  try {
+
+  const {tripId,kmValue}= req.body
+  console.log(" this is the data ",req.body);
+  
+      const  updated= await prisma.tripSheet.update({
+      where:{formId:tripId},
+      data:{
+        openKm:kmValue}  })
+    
+        res.status(200).json({
+          success: true,
+          message: "Trip sheet updated successfully",
+          data: updated,
+        });
+  } catch (error) {
+    console.error("Error updating trip sheet:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}
+
+
+export const updateGuestSignature = async (req, res) => {
+  try {
+    const { tripId, Guestsignature } = req.body;
+
+    if (!tripId || !Guestsignature) {
+      return res.status(400).json({
+        success: false,
+        message: "tripId and Guestsignature are required.",
+      });
+    }
+
+    const guestSignatureFileName = saveSignatureImage(Guestsignature, "guest");
+
+    if (!guestSignatureFileName) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to save guest signature image.",
+      });
+    }
+
+    const updatedSignature = await prisma.tripSheet.update({
+      where: {
+        formId: tripId,
+      },
+      data: {
+        guest_url: guestSignatureFileName,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Guest signature updated successfully.",
+      data: updatedSignature,
+    });
+  } catch (error) {
+    console.error("Error updating guest signature:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error. Could not update guest signature.",
+      error: error.message,
     });
   }
 };

@@ -1120,3 +1120,37 @@ console.log(" this is the body ",req.body);
     });
   }
 };
+
+export const fetchAssignedTripList = async (req, res) => {
+  try {
+    const trips = await prisma.tripSheet.findMany({
+      where: {
+        status: 'Assigned',
+      },
+      orderBy: {
+        createdAt: 'asc', // or use assignedAt / date if needed
+      },
+      select: {
+        id: true,
+        customer: true,
+        vehicleNo: true,
+        driverName: true,
+        createdAt: true,
+        openKm:true
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Assigned trips fetched successfully',
+      data: trips,
+    });
+  } catch (error) {
+    console.error('Error fetching assigned trips:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch assigned trips',
+      error: error.message,
+    });
+  }
+}
